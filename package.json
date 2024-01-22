@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "axios": "^1.6.5",
+    "discord.js": "^14.14.1",
+    "firebase": "^10.7.2",
+    "firebase-admin": "^12.0.0",
+    "nodemon": "^3.0.3"
+  },
+  "name": "nitrado-ase-application",
+  "version": "1.0.0",
+  "main": "source/script.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

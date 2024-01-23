@@ -30,6 +30,7 @@ module.exports = {
           const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/banlist`;
           const response = await axios.post(url, { identifier: input.username }, { headers: { 'Authorization': reference.nitrado.token } });
           response.status === 200 ? success++ : unauthorized();
+          console.log(response.data.data.message);
         } catch (error) { if (error.response.data.message === "Can't add the user to the banlist.") { success++ }; };
       };
 
@@ -40,9 +41,10 @@ module.exports = {
       const tasks = await services.map(async service => await filter(service));
 
       await Promise.all(tasks).then(async () => {
+
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
-          .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${tasks.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
+          .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${action.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
           .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

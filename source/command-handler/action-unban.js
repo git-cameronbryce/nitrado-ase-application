@@ -36,8 +36,9 @@ module.exports = {
         try {
           const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/banlist`;
           const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: input.username } });
-          response.status === 200 ? success++ : unauthorized()
-        } catch (error) { if (error.response.data.message === "Can't add the user to the banlist.") { success++ }; };
+          response.status === 200 ? success++ : unauthorized();
+          console.log(response.data.data.message);
+        } catch (error) { if (error.response.data.message === "Can't remove the user from the banlist.") { success++ }; };
       };
 
       const filter = async (service) => {
@@ -49,7 +50,7 @@ module.exports = {
       await Promise.all(tasks).then(async () => {
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
-          .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${tasks.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
+          .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${action.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
           .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

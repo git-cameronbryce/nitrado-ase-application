@@ -42,7 +42,7 @@ module.exports = {
         return interaction.followUp({ embeds: [embed] });
       };
 
-      let success = 0;
+      let current = 0, success = 0;
       const gameserver = async (reference, services) => {
         const action = async (service) => {
           try {
@@ -54,7 +54,7 @@ module.exports = {
         };
 
         const filter = async (service) => {
-          platforms[service.details.folder_short] ? await action(service) : console.log('Incompatible gameserver.')
+          platforms[service.details.folder_short] && service.status !== 'suspended' ? (await action(service), current++) : console.log('Incompatible gameserver.')
         };
 
         const tasks = await services.map(async service => await filter(service));

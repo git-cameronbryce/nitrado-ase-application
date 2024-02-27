@@ -42,19 +42,18 @@ module.exports = {
         return interaction.followUp({ embeds: [embed] });
       };
 
-      let success = 0;
+      let current = 0, success = 0;
       const gameserver = async (reference, services) => {
         const action = async (service) => {
           try {
             const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/banlist`;
             const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: input.username } });
             response.status === 200 ? success++ : unauthorized();
-            console.log(response.data.data.message);
           } catch (error) { if (error.response.data.message === "Can't remove the user from the banlist.") { success++ }; };
         };
 
         const filter = async (service) => {
-          platforms[service.details.folder_short] ? await action(service) : console.log('Incompatible gameserver.')
+          platforms[service.details.folder_short] && service.status !== 'suspended' ? (await action(service), current++) : console.log('Incompatible gameserver.')
         };
 
         const tasks = await services.map(async service => await filter(service));

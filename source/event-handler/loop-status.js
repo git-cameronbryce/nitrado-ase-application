@@ -30,8 +30,12 @@ module.exports = {
           );
 
           const sortedActions = actions
-            .filter((action) => action)
-            .sort((a, b) => b.query.player_current - a.query.player_current);
+            .sort((a, b) => {
+              const playerCurrentA = a.query?.player_current || 0;
+              const playerCurrentB = b.query?.player_current || 0;
+              return playerCurrentB - playerCurrentA;
+            })
+            .filter(action => action);
 
           let output = '';
           sortedActions.slice(0, 15).forEach((action) => {

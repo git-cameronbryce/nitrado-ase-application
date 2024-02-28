@@ -6,7 +6,7 @@ process.on("unhandledRejection", (err) => console.error(err));
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('player-ban')
+    .setName('ase-player-ban')
     .setDescription('Performs an in-game player action.')
     .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true))
     .addStringOption(option => option.setName('reason').setDescription('Required to submit ban action.').setRequired(true)

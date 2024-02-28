@@ -1,13 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { db } = require('../script.js');
-const axios = require('axios');
 
 process.on('unhandledRejection', (error) => console.error(error));
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('player-lookup')
-    .setDescription('Performs a database player lookup.')
+    .setName('ase-player-lookup')
+    .setDescription('Performs an external player lookup.')
     .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true)),
 
   async execute(interaction) {

@@ -6,7 +6,7 @@ process.on("unhandledRejection", (err) => console.error(err));
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('player-search')
+    .setName('ase-player-search')
     .setDescription('Performs an in-game search action.')
     .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true))
     .addStringOption(option => option.setName('search-algorithm').setDescription('Algorithm to return usernames.').setRequired(true)

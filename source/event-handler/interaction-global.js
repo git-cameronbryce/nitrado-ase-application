@@ -1,9 +1,8 @@
-const { ActionRowBuilder, Events, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { db } = require('../script.js');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true };
-process.on('unhandledRejection', (error) => console.error(error));
 
 module.exports = {
   name: Events.ClientReady,

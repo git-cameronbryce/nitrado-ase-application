@@ -1,25 +1,20 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { FieldValue } = require('@google-cloud/firestore');
 const { db } = require('../script.js');
 const axios = require('axios');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('ase-player-unwhitelist')
-    .setDescription('Performs an in-game player action.')
-    .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true)),
+    .setName('ase-server-stop')
+    .setDescription('Performs a stopping action on selected server.')
+    .addNumberOption(option => option.setName('identifier').setDescription('Performs server action, list the exact identification number.').setRequired(true)),
 
   async execute(interaction) {
-    const platforms = { arkxb: true, arkps: true, arkse: true };
-    await interaction.deferReply();
 
     const input = {
-      username: interaction.options.getString('username'),
+      identifier: interaction.options.getNumber('identifier'),
       guild: interaction.guild.id,
-      admin: interaction.user.id,
+      admin: interaction.user.id
     };
-
-    input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
 
     await interaction.guild.roles.fetch().then(async roles => {
       const role = roles.find(role => role.name === 'Obelisk Permission');
@@ -36,36 +31,36 @@ module.exports = {
       const unauthorized = async () => {
         const embed = new EmbedBuilder()
           .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have a connected account.\nPlease authorize with your provider.\n\`/setup-account\`\n\n**Additional Information**\nEnsure you follow setup procedures.`)
+          .setDescription(`** Unauthorized Access **\nYou do not have a connected account.\nPlease authorize with your provider.\n\`/setup-account\`\n\n**Additional Information**\nEnsure you follow setup procedures.`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-        return interaction.followUp({ embeds: [embed] });
+        return await interaction.followUp({ embeds: [embed] });
       };
 
-      let current = 0, success = 0;
+      const success = async () => {
+        const embed = new EmbedBuilder()
+          .setColor('#2ecc71')
+          .setDescription(`**Server Command Success**\nBackup has been automatically collected.\nNitrado uptime is required to save fully.\n\`🟢\` \`1 Gameservers Stopping\`\n\n**Additional Information**\nNo negative effects to this action.`)
+          .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+        return await interaction.followUp({ embeds: [embed] });
+      };
+
+      let valid = false;
       const gameserver = async (reference, services) => {
-        const action = async (service) => {
-          try {
-            const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/whitelist`;
-            const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: input.username } });
-            response.status === 200 ? success++ : unauthorized();
-          } catch (error) { if (error.response.data.message === "Can't remove the user from the whitelist.") { success++ }; };
-        };
-
-        const filter = async (service) => {
-          platforms[service.details.folder_short] && service.status !== 'suspended' ? (await action(service), current++) : console.log('Incompatible gameserver.')
-        };
-
-        const tasks = await services.map(async service => await filter(service));
+        const tasks = services.map(async service => {
+          if (input.identifier === service.id) {
+            const url = `https://api.nitrado.net/services/${input.identifier}/gameservers/stop`;
+            const response = await axios.post(url, { message: `Obelisk Manual Stop: ${interaction.user.id}` }, { headers: { 'Authorization': reference.nitrado.token } });
+            if (response.status === 200) {
+              console.log(`Gameserver stopping: ${response.status}`);
+              valid = true, await success();
+            };
+          };
+        });
 
         await Promise.all(tasks).then(async () => {
-          const embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${action.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setThumbnail('https://i.imgur.com/CzGfRzv.png')
-
-          await interaction.followUp({ embeds: [embed] })
+          if (!valid) { await interaction.followUp({ content: 'Invalid service identifier!' }) }
         });
       };
 

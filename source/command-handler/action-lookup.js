@@ -1,8 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { db } = require('../script.js');
 
-process.on('unhandledRejection', (error) => console.error(error));
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ase-player-lookup')

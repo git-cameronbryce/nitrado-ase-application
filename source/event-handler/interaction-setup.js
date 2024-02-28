@@ -2,8 +2,6 @@ const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, T
 const { db } = require('../script.js');
 const axios = require('axios');
 
-process.on('unhandledRejection', (error) => console.error(error));
-
 module.exports = {
   name: Events.ClientReady,
   once: true,

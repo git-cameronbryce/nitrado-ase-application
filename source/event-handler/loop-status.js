@@ -111,7 +111,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? validDocument(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 5000);
+      setTimeout(loop, 10000);
     };
     loop().then(() => console.log('Loop started:'));
   },

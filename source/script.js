@@ -20,4 +20,8 @@ client.on('ready', () => {
     { type: ActivityType.Listening });
 });
 
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Promise Rejection:', error);
+});
+
 client.login(token).then(() => console.log('Client logged in...'));

@@ -21,6 +21,8 @@ module.exports = {
       guild: interaction.guild.id,
     };
 
+    input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
+
     const unauthorized = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
@@ -46,11 +48,12 @@ module.exports = {
       let counter = 0;
       const gameserver = async (reference, services) => {
         const parse = async (query, { name, online, last_online }) => {
-          if (counter < 5) {
-            counter++
-            online
-              ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${query.server_name ? query.server_name : 'Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(last_online) / 1000)}:f>\n\`🔗\` ${name}\n\n`
-              : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${query.server_name ? query.server_name : 'Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(last_online) / 1000)}:f>\n\`🔗\` ${name}\n\n`
+          if (counter < 5 && online) {
+            output += `\`🟢\` \`Player Online\`\n\`🔗\` ${query.server_name ? query.server_name : 'Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(last_online) / 1000)}:f>\n\`🔗\` ${name}\n\n`;
+            counter++;
+          } else if (counter < 5 && !online) {
+            output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${query.server_name ? query.server_name : 'Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(last_online) / 1000)}:f>\n\`🔗\` ${name}\n\n`;
+            counter++;
           };
         };
 

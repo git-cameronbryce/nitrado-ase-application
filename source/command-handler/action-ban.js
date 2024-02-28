@@ -23,6 +23,8 @@ module.exports = {
       admin: interaction.user.id,
     };
 
+    input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
+
     await interaction.guild.roles.fetch().then(async roles => {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -64,7 +66,7 @@ module.exports = {
 
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
+            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

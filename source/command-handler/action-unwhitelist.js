@@ -21,6 +21,8 @@ module.exports = {
       admin: interaction.user.id,
     };
 
+    input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
+
     await interaction.guild.roles.fetch().then(async roles => {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 

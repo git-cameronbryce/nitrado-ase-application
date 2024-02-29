@@ -40,7 +40,7 @@ module.exports = {
       const success = async () => {
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
-          .setDescription(`**Server Command Success**\nBackup has been automatically collected.\nNitrado uptime is required to save fully.\n\`🟢\` \`1 Gameservers Restarting\`\n\n**Additional Information**\nNo negative effects to this action.`)
+          .setDescription(`**Server Command Success**\nBackup has been automatically collected.\nNitrado uptime is required to save fully.\n\`🟢\` \`1 Gameserver Restarting\`\n\n**Additional Information**\nNo negative effects to this action.`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
         return await interaction.followUp({ embeds: [embed] });

@@ -162,14 +162,43 @@ module.exports = {
             parent: audits
           });
 
+          const logging = await interaction.guild.channels.create({
+            name: `AS:E Game Logging`,
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: permissions
+          });
+
+          const admin = await interaction.guild.channels.create({
+            name: '📑│𝗔dmin-𝗟ogging',
+            type: ChannelType.GuildForum,
+            permissionOverwrites: permissions,
+            parent: logging
+          });
+
+          const chat = await interaction.guild.channels.create({
+            name: '📑│𝗖hat-𝗟ogging',
+            type: ChannelType.GuildForum,
+            permissionOverwrites: permissions,
+            parent: logging
+          });
+
+          const process = await interaction.guild.channels.create({
+            name: '🔗│𝗜nstallation',
+            type: ChannelType.GuildText,
+            permissionOverwrites: permissions,
+            parent: logging
+          });
+
           await db.collection('ase-configuration').doc(interaction.guild.id)
             .set({
-              ['statistics']: { players: players.id, active: active.id, outage: outage.id },
               ['audits']: { server: serverCommands.id, player: playerCommands.id },
               ['status']: { channel: status.id, message: message.id },
+              ['logging']: { admin: admin.id, chat: chat.id },
+              ['statistics']: { players: players.id, active: active.id, outage: outage.id },
+
             }, { merge: true });
 
-          await installation.edit({ content: 'Installation complete...', ephemeral: true })
+          await installation.edit({ content: 'Installation complete...', ephemeral: true });
         };
       } catch (error) { console.log(error) };
     });

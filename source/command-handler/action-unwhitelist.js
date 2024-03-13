@@ -61,11 +61,22 @@ module.exports = {
         await Promise.all(tasks).then(async () => {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${action.length}\` servers.\n<t:${Math.floor(Date.now() / 1000)}:f>`)
+            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
           await interaction.followUp({ embeds: [embed] })
+
+          try {
+            const embed = new EmbedBuilder()
+              .setColor('#2ecc71')
+              .setFooter({ text: `Tip: Contact support if there are issues.` })
+              .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-unwhitelist\`\n\n**ID: ${interaction.user.id}**`);
+
+            const channel = await interaction.client.channels.fetch(reference.audits.player);
+            await channel.send({ embeds: [embed] });
+
+          } catch (error) { console.log('Missing access.') }
         });
       };
 

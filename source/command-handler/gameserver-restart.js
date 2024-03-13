@@ -4,11 +4,12 @@ const axios = require('axios');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('ase-server-restart')
+    .setName('ase-gameserver-restart')
     .setDescription('Performs a restarting action on selected server.')
     .addNumberOption(option => option.setName('identifier').setDescription('Performs server action, list the exact identification number.').setRequired(true)),
 
   async execute(interaction) {
+    await interaction.deferReply();
 
     const input = {
       identifier: interaction.options.getNumber('identifier'),
@@ -60,7 +61,19 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          if (!valid) { await interaction.followUp({ content: 'Invalid service identifier!' }) }
+          if (valid) {
+            try {
+              const embed = new EmbedBuilder()
+                .setColor('#2ecc71')
+                .setFooter({ text: `Tip: Contact support if there are issues.` })
+                .setDescription(`**Server Command Logging**\nGameserver action completed.\n\`/ase-gameserver-restart\`\n\n**ID: ${interaction.user.id}**`);
+
+              const channel = await interaction.client.channels.fetch(reference.audits.server);
+              await channel.send({ embeds: [embed] });
+
+            } catch (error) { console.log('Missing access.') };
+
+          } else { await interaction.followUp({ content: 'Invalid service identifier!' }) }
         });
       };
 

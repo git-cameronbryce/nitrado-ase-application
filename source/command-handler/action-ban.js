@@ -2,6 +2,10 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { db } = require('../script.js');
 const axios = require('axios');
 
+process.on('unhandledRejection', (error) => console.error(error));
+
+const platforms = { arkxb: true, arkps: true, arkse: true };
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ase-player-ban')
@@ -11,7 +15,6 @@ module.exports = {
       .addChoices({ name: 'Breaking Rules', value: 'breaking rules' }, { name: 'Cheating', value: 'cheating' }, { name: 'Behavior', value: 'behavior' }, { name: 'Meshing', value: 'meshing' }, { name: 'Other', value: 'other reasons' })),
 
   async execute(interaction) {
-    const platforms = { arkxb: true, arkps: true, arkse: true };
     await interaction.deferReply();
 
     const input = {
@@ -61,7 +64,6 @@ module.exports = {
         const tasks = await services.map(async service => await filter(service));
 
         await Promise.all(tasks).then(async () => {
-
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
             .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
@@ -71,6 +73,18 @@ module.exports = {
           await interaction.followUp({ embeds: [embed] })
             .then(async () => {
               if (success) {
+
+                try {
+                  const embed = new EmbedBuilder()
+                    .setColor('#2ecc71')
+                    .setFooter({ text: `Tip: Contact support if there are issues.` })
+                    .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-ban\`\n\n**ID: ${interaction.user.id}**`);
+
+                  const channel = await interaction.client.channels.fetch(reference.audits.player);
+                  await channel.send({ embeds: [embed] });
+
+                } catch (error) { console.log('Missing access.') }
+
                 await db.collection('ase-player-banned').doc(input.guild).set({
                   [input.username]: { admin: input.admin, reason: input.reason }
                 }, { merge: true });

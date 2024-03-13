@@ -20,6 +20,4 @@ client.on('ready', () => {
     { type: ActivityType.Listening });
 });
 
-
-
 client.login(token).then(() => console.log('Client logged in...'));

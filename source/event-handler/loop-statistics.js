@@ -11,34 +11,35 @@ module.exports = {
       let players = 0, active = 0, outage = 0;
       const platforms = { arkxb: true, arkps: true, arkse: true };
       const gameserver = async (nitrado, statistics, services) => {
-        const playerThread = await client.channels.fetch(statistics.players);
-        const activeThread = await client.channels.fetch(statistics.active);
-        const outageThread = await client.channels.fetch(statistics.outage);
+        try {
 
-        const tasks = await services.map(async service => {
-          try {
-            const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-            const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-            const { status, query, game } = response.data.data.gameserver;
+          const playerThread = await client.channels.fetch(statistics.players);
+          const activeThread = await client.channels.fetch(statistics.active);
+          const outageThread = await client.channels.fetch(statistics.outage);
 
-            if (platforms[game] && service.status !== 'suspended') {
-              if (status === 'started' && query) { players += query.player_current; };
-              if (status === 'started') { active++; };
-              if (status !== 'started') { outage++ };
-            };
-          } catch (error) { console.log(error) };
-        });
+          const tasks = await services.map(async service => {
+            try {
+              const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
+              const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+              const { status, query, game } = response.data.data.gameserver;
 
-        await Promise.all(tasks).then(async () => {
-          try {
-            await outageThread.setName(`Offline: ${outage} Servers`);
-            await playerThread.setName(`Active: ${players} Players`);
-            await activeThread.setName(`Active: ${active} Servers`);
+              if (platforms[game] && service.status !== 'suspended') {
+                if (status === 'started' && query) { players += query.player_current ? query.player_current : 0; };
+                if (status === 'started') { active++; };
+                if (status !== 'started') { outage++ };
+              };
+            } catch (error) { console.log(error) };
+          });
 
-            console.log(players, active, outage);
+          await Promise.all(tasks).then(async () => {
+            try {
+              await outageThread.setName(`Offline: ${outage} Servers`);
+              await playerThread.setName(`Active: ${players} Players`);
+              await activeThread.setName(`Active: ${active} Servers`);
 
-          } catch (error) { if (error.code === 50013) { null } };
-        });
+            } catch (error) { if (error.code === 50013) { null } };
+          });
+        } catch (error) { null; };
       };
 
       const service = async (nitrado, statistics) => {
@@ -59,7 +60,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 10000);
+      setTimeout(loop, 60000);
     };
     loop().then(() => console.log('Loop started:'));
   },

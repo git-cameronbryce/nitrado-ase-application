@@ -134,13 +134,13 @@ module.exports = {
             parent: management
           });
 
-          const embed = new EmbedBuilder()
+          let embed = new EmbedBuilder()
             .setColor('#2ecc71')
             .setDescription(`**Cluster Status Installation**\nThe status page is currently being installed. \nBelow is the expected processing timer. \n\nEstimated: <t:${Math.floor(Date.now() / 1000) + 300}:R>`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setImage('https://i.imgur.com/2ZIHUgx.png')
 
-          const message = await status.send({ embeds: [embed] })
+          const message = await status.send({ embeds: [embed] });
 
           const audits = await interaction.guild.channels.create({
             name: `AS:E Audit Logging`,
@@ -162,40 +162,48 @@ module.exports = {
             parent: audits
           });
 
-          const logging = await interaction.guild.channels.create({
-            name: `AS:E Game Logging`,
+          const loggingProcess = await interaction.guild.channels.create({
+            name: '📄│𝗟ogging-𝗣rocess',
+            type: ChannelType.GuildText,
+            permissionOverwrites: permissions,
+            parent: audits
+          });
+
+          const button = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setURL('https://discord.gg/jee3ukfvVr')
+                .setLabel('Support Server')
+                .setStyle(ButtonStyle.Link),
+            );
+
+          embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`**Logging Setup & Overview**\nFor those interested in utilizing our logging features, add our dedicated application which is compatible with both \`AS: E / A\` game versions.\n\n**Logging Expected Release **\nConsider joining our community below, where you can follow expected release schedules.  We are working with another developer for this project.`)
+            .setFooter({ text: 'Tip: Contact support if there are issues.' })
+            .setImage('https://i.imgur.com/2ZIHUgx.png')
+
+          await loggingProcess.send({ embeds: [embed], components: [button] });
+
+          const protections = await interaction.guild.channels.create({
+            name: `AS:E Protections `,
             type: ChannelType.GuildCategory,
             permissionOverwrites: permissions
           });
 
-          const admin = await interaction.guild.channels.create({
-            name: '📑│𝗔dmin-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
-
-          const chat = await interaction.guild.channels.create({
-            name: '📑│𝗖hat-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
-
-          const process = await interaction.guild.channels.create({
-            name: '🔗│𝗜nstallation',
+          const dupe = await interaction.guild.channels.create({
+            name: '🔗│𝗗upe-𝗗etection',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
-            parent: logging
+            parent: protections
           });
 
           await db.collection('ase-configuration').doc(interaction.guild.id)
             .set({
+              ['protections']: { channel: dupe.id },
+              ['statistics']: { players: players.id, active: active.id, outage: outage.id },
               ['audits']: { server: serverCommands.id, player: playerCommands.id },
               ['status']: { channel: status.id, message: message.id },
-              ['logging']: { admin: admin.id, chat: chat.id },
-              ['statistics']: { players: players.id, active: active.id, outage: outage.id },
-
             }, { merge: true });
 
           await installation.edit({ content: 'Installation complete...', ephemeral: true });

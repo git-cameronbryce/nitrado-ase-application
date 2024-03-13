@@ -8,7 +8,7 @@ module.exports = {
   execute(client) {
     async function loop() {
 
-      const validService = async (nitrado, status, services) => {
+      const gameserver = async (nitrado, status, services) => {
         try {
           const platforms = { arkxb: true, arkps: true, arkse: true };
           const channel = await client.channels.fetch(status.channel);
@@ -23,7 +23,7 @@ module.exports = {
                 const { status, query } = response.data.data.gameserver;
                 const { suspend_date } = service;
 
-                if (status === 'started' && query.player_current > 0 && query.player_max > 0) { current += query.player_current, total += query.player_max };
+                if (status === 'started') { current += query.player_current ? query.player_current : 0, total += query.player_max ? query.player_max : 0 };
                 return { status, query, service, suspend_date };
               }
             })
@@ -92,26 +92,26 @@ module.exports = {
         };
       };
 
-      const validToken = async (nitrado, status) => {
+      const service = async (nitrado, status) => {
         const url = 'https://api.nitrado.net/services';
         const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
         const services = response.data.data.services;
-        response.status === 200 ? validService(nitrado, status, services) : invalidService()
+        response.status === 200 ? gameserver(nitrado, status, services) : invalidService()
       };
 
-      const validDocument = async ({ nitrado, status }) => {
+      const token = async ({ nitrado, status }) => {
         try {
           const url = 'https://oauth.nitrado.net/token';
           const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
-          response.status === 200 ? validToken(nitrado, status) : console.log('Invalid token');
+          response.status === 200 ? service(nitrado, status) : console.log('Invalid token');
         } catch (error) { null };
       };
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
-        doc.data() ? validDocument(doc.data()) : console.log('Invalid document.');
+        doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 10000);
+      setTimeout(loop, 60000);
     };
     loop().then(() => console.log('Loop started:'));
   },

@@ -9,9 +9,10 @@ module.exports = {
   once: true,
   execute(client) {
     client.on(Events.InteractionCreate, async interaction => {
-      await interaction.deferReply();
 
       if (interaction.customId === 'cluster-command') {
+        await interaction.deferReply();
+
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -72,6 +73,8 @@ module.exports = {
       };
 
       if (interaction.customId === 'restart-cluster') {
+        await interaction.deferReply();
+
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -147,6 +150,8 @@ module.exports = {
       };
 
       if (interaction.customId === 'stop-cluster') {
+        await interaction.deferReply();
+
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 

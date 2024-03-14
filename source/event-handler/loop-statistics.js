@@ -9,7 +9,7 @@ module.exports = {
     async function loop() {
 
       let players = 0, active = 0, outage = 0;
-      const platforms = { arkxb: true, arkps: true, arkse: true };
+      const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
       const gameserver = async (nitrado, statistics, services) => {
         try {
 
@@ -62,6 +62,6 @@ module.exports = {
       });
       setTimeout(loop, 60000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

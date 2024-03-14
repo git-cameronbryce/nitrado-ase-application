@@ -10,7 +10,7 @@ module.exports = {
 
       const gameserver = async (nitrado, status, services) => {
         try {
-          const platforms = { arkxb: true, arkps: true, arkse: true };
+          const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
           const channel = await client.channels.fetch(status.channel);
           const message = await channel.messages.fetch(status.message);
 
@@ -82,7 +82,7 @@ module.exports = {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
             .setDescription(`${output}**Cluster Player Count**\n \`🌐\` \`(${current}/${total})\`\n\n<t:${Math.floor(Date.now() / 1000)}:R>\n**[Partnership & Information](https://nitra.do/obeliskdevelopment)**\nConsider using our partnership link to purchase your gameservers, it will help fund development.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
+            .setFooter({ text: 'Tip: Contact support if there are issues.\nLimited 0 - 15 gameservers listed.' })
             .setImage('https://i.imgur.com/2ZIHUgx.png');
 
           await message.edit({ embeds: [embed], components: [button] });
@@ -111,7 +111,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 60000);
+      setTimeout(loop, 120000);
     };
     loop().then(() => console.log('Loop started:'));
   },

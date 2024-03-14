@@ -11,6 +11,7 @@ module.exports = {
   execute(client) {
 
     async function loop() {
+      const platforms = { arkxb: true, arkps: true };
 
       const gameserver = async (nitrado, protections, services) => {
         const verify = async (player) => {
@@ -58,6 +59,6 @@ module.exports = {
       });
       setTimeout(loop, 10000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

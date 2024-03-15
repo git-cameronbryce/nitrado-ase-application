@@ -90,7 +90,6 @@ module.exports = {
           const message = await interaction.message;
 
           const success = async (data) => {
-            await interaction.deferReply()
 
             const button = new ActionRowBuilder()
               .addComponents(
@@ -127,7 +126,7 @@ module.exports = {
 
             const data = [];
             const responses = await Promise.all(promise);
-            responses.forEach(responses => { data.push(responses.status) });
+            responses.forEach(responses => { if (responses) { data.push(responses.status) } });
             success(data)
           };
 
@@ -144,7 +143,7 @@ module.exports = {
             response.status === 200 ? validToken(nitrado) : console.log('Invalid token'), null;
           };
 
-          const reference = (await db.collection('configuration').doc(interaction.guild.id).get()).data()
+          const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data()
           reference ? validDocument(reference) : console.log('Error')
         });
       };
@@ -167,7 +166,6 @@ module.exports = {
           const message = await interaction.message;
 
           const success = async (data) => {
-            await interaction.deferReply()
 
             const button = new ActionRowBuilder()
               .addComponents(
@@ -204,7 +202,7 @@ module.exports = {
 
             const data = [];
             const responses = await Promise.all(promise);
-            responses.forEach(responses => { data.push(responses.status) });
+            responses.forEach(responses => { if (responses) { data.push(responses.status) } });
             success(data)
           };
 
@@ -221,13 +219,45 @@ module.exports = {
             response.status === 200 ? validToken(nitrado) : console.log('Invalid token'), null;
           };
 
-          const reference = (await db.collection('configuration').doc(interaction.guild.id).get()).data()
+          const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data()
           reference ? validDocument(reference) : console.log('Error')
         });
       };
 
       if (interaction.customId === 'auto-maintanance') {
-        // Add in later version...
+        const platforms = { arkxb: true, arkps: true, arkse: true, arksa: true, arkswitch: true };
+
+        const gameserver = async (reference, services) => {
+
+          const filter = async (service) => {
+            platforms[service.details.folder_short] && service.status === 'stopped' ? console.log('Status: Stopped') : console.log('Status: Online')
+          };
+
+          const tasks = await services.map(async service => {
+            const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
+            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } })
+            if (response.status === 200) { await filter(service, response.data.data.gameserver) };
+          });
+        }
+
+        const service = async (reference) => {
+          try {
+            const url = 'https://api.nitrado.net/services';
+            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+            response.status === 200 ? gameserver(reference, response.data.data.services) : unauthorized();
+          } catch (error) { unauthorized() };
+        };
+
+        const token = async (reference) => {
+          try {
+            const url = 'https://oauth.nitrado.net/token';
+            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+            response.status === 200 ? service(reference) : unauthorized();
+          } catch (error) { unauthorized() };
+        };
+
+        const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data();
+        reference ? await token(reference) : unauthorized();
       };
     });
   },

@@ -97,7 +97,12 @@ module.exports = {
 
             const data = { 'admin': { [input.identifier]: adminThread.id } };
             await db.collection('ase-configuration').doc(input.guild).set(data, { merge: true }).then(async () => {
-              console.log('Logging thread installed.')
+              const embed = new EmbedBuilder()
+                .setColor('#2ecc71')
+                .setDescription(`**Firebase: Logging Service Installing**\nObelisk has processed your request.\nThe logging thread is now active.\n[\`📑: Admin Thread Hyperlink\`](https://discord.com/channels/${input.guild}/${adminThread.id})\n\n**Additional Information**\nLogging may take one hour to show.\nPlease review the installation page.`)
+                .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+              await interaction.followUp({ embeds: [embed] });
             });
           }
 
@@ -191,7 +196,12 @@ module.exports = {
 
             const data = { 'chat': { [input.identifier]: chatThread.id } };
             await db.collection('ase-configuration').doc(input.guild).set(data, { merge: true }).then(async () => {
-              console.log('Logging thread installed.')
+              const embed = new EmbedBuilder()
+                .setColor('#2ecc71')
+                .setDescription(`**Firebase: Logging Service Installing**\nObelisk has processed your request.\nThe logging thread is now active.\n[\`📑: Chat Thread Hyperlink\`](https://discord.com/channels/${input.guild}/${chatThread.id})\n\n**Additional Information**\nLogging may take one hour to show.\nPlease review the installation page.`)
+                .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+              await interaction.followUp({ embeds: [embed] });
             });
           }
 

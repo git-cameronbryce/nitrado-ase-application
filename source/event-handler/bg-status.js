@@ -76,7 +76,7 @@ module.exports = {
                 .setLabel('Auto Maintanance')
                 .setCustomId('auto-maintanance')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true),
+                .setDisabled(false),
             );
 
           const embed = new EmbedBuilder()

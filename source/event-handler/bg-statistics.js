@@ -8,11 +8,11 @@ module.exports = {
   execute(client) {
     async function loop() {
 
-      let players = 0, active = 0, outage = 0;
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
       const gameserver = async (nitrado, statistics, services) => {
-        try {
+        let players = 0, active = 0, outage = 0;
 
+        try {
           const playerThread = await client.channels.fetch(statistics.players);
           const activeThread = await client.channels.fetch(statistics.active);
           const outageThread = await client.channels.fetch(statistics.outage);

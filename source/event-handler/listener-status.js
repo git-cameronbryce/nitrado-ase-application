@@ -11,8 +11,6 @@ module.exports = {
     client.on(Events.InteractionCreate, async interaction => {
 
       if (interaction.customId === 'cluster-command') {
-        await interaction.deferReply();
-
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -22,8 +20,10 @@ module.exports = {
               .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-            return interaction.followUp({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
           };
+
+          await interaction.deferReply();
 
           let filtered = 0;
           const validService = async (services) => {
@@ -51,7 +51,7 @@ module.exports = {
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
               .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nPerform a cluster-wide server action.\n\`🟠\` \`${filtered} Gameservers Pending\`\n\n**Additional Information**\nDelete this message to return.`)
 
-            await interaction.followUp({ embeds: [embed], components: [button], ephemeral: false });
+            await interaction.followUp({ embeds: [embed], components: [button], ephemeral: true });
           }
 
           const validToken = async (nitrado) => {
@@ -73,8 +73,6 @@ module.exports = {
       };
 
       if (interaction.customId === 'restart-cluster') {
-        await interaction.deferReply();
-
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -109,11 +107,10 @@ module.exports = {
             const embed = new EmbedBuilder()
               .setColor('#2ecc71')
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
-              .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nPerform a cluster-wide server action.\n\`🟢\` \`${data.length} Gameservers Restarting\`\n\n**Additional Information**\nDeletion:  <t:${Math.floor(Date.now() / 1000) + 15}:R>`)
+              .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nPerform a cluster-wide server action.\n\`🟢\` \`${data.length} Gameservers Restarting\`\n\n`)
 
-            const info = await interaction.followUp({ content: 'Data Fetch Success - API Online', ephemeral: false })
+            await interaction.reply({ content: 'Data Fetch Success - API Online', ephemeral: true })
             await message.edit({ embeds: [embed], components: [button] })
-              .then(() => setTimeout(() => { message.delete(); info.delete(); }, 15000));
           };
 
           const validService = async (nitrado, services) => {
@@ -149,8 +146,6 @@ module.exports = {
       };
 
       if (interaction.customId === 'stop-cluster') {
-        await interaction.deferReply();
-
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
@@ -185,11 +180,10 @@ module.exports = {
             const embed = new EmbedBuilder()
               .setColor('#2ecc71')
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
-              .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nPerform a cluster-wide server action.\n\`🟢\` \`${data.length} Gameservers Stopping\`\n\n**Additional Information**\nDeletion:  <t:${Math.floor(Date.now() / 1000) + 15}:R>`)
+              .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nPerform a cluster-wide server action.\n\`🟢\` \`${data.length} Gameservers Stopping\``)
 
-            const info = await interaction.followUp({ content: 'Data Fetch Success - API Online', ephemeral: false })
+            await interaction.reply({ content: 'Data Fetch Success - API Online', ephemeral: true })
             await message.edit({ embeds: [embed], components: [button] })
-              .then(() => setTimeout(() => { message.delete(); info.delete(); }, 13000));
           };
 
           const validService = async (nitrado, services) => {
@@ -225,39 +219,130 @@ module.exports = {
       };
 
       if (interaction.customId === 'auto-maintanance') {
-        const platforms = { arkxb: true, arkps: true, arkse: true, arksa: true, arkswitch: true };
+        await interaction.guild.roles.fetch().then(async roles => {
+          const role = roles.find(role => role.name === 'Obelisk Permission');
 
-        const gameserver = async (reference, services) => {
+          if (!role || !interaction.member.roles.cache.has(role.id)) {
+            const embed = new EmbedBuilder()
+              .setColor('#e67e22')
+              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-          const filter = async (service) => {
-            platforms[service.details.folder_short] && service.status === 'stopped' ? console.log('Status: Stopped') : console.log('Status: Online')
+            return interaction.reply({ embeds: [embed], ephemeral: true });
           };
 
-          const tasks = await services.map(async service => {
-            const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } })
-            if (response.status === 200) { await filter(service, response.data.data.gameserver) };
-          });
-        }
+          const button = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setLabel('Enable A:S:M')
+                .setCustomId('enable-asm')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(false),
 
-        const service = async (reference) => {
-          try {
-            const url = 'https://api.nitrado.net/services';
-            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            response.status === 200 ? gameserver(reference, response.data.data.services) : unauthorized();
-          } catch (error) { unauthorized() };
-        };
+              new ButtonBuilder()
+                .setLabel('Disable A:S:M')
+                .setCustomId('disable-asm')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(false),
+            );
 
-        const token = async (reference) => {
-          try {
-            const url = 'https://oauth.nitrado.net/token';
-            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            response.status === 200 ? service(reference) : unauthorized();
-          } catch (error) { unauthorized() };
-        };
+          const embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nThe bot will begin monitoring servers.\n\n**Additional Information**\nFuture offline servers will be restarted.\nRestarted servers will be logged here.`)
+            .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-        const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data();
-        reference ? await token(reference) : unauthorized();
+          await interaction.reply({ embeds: [embed], components: [button] })
+        })
+      };
+
+      if (interaction.customId === 'enable-asm') {
+
+        await interaction.guild.roles.fetch().then(async roles => {
+          const role = roles.find(role => role.name === 'Obelisk Permission');
+
+          if (!role || !interaction.member.roles.cache.has(role.id)) {
+            const embed = new EmbedBuilder()
+              .setColor('#e67e22')
+              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+          };
+
+          const message = await interaction.message;
+
+          const button = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setLabel('Enable A:S:M')
+                .setCustomId('enable-asm')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+
+              new ButtonBuilder()
+                .setLabel('Disable A:S:M')
+                .setCustomId('disable-asm')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true),
+            );
+
+          const embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nThe bot will begin monitoring servers.\n\`🟢\` \`Feature Enabled\``)
+            .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+          await interaction.reply({ content: 'Data Fetch Success - API Online', ephemeral: true })
+          await message.edit({ embeds: [embed], components: [button] });
+
+          await db.collection('ase-configuration').doc(interaction.guild.id).set({
+            ['status']: { asm: true }
+          }, { merge: true })
+        })
+      };
+
+      if (interaction.customId === 'disable-asm') {
+
+        await interaction.guild.roles.fetch().then(async roles => {
+          const role = roles.find(role => role.name === 'Obelisk Permission');
+
+          if (!role || !interaction.member.roles.cache.has(role.id)) {
+            const embed = new EmbedBuilder()
+              .setColor('#e67e22')
+              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+          };
+
+          const message = await interaction.message;
+
+          const button = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setLabel('Enable A:S:M')
+                .setCustomId('enable-asm')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+
+              new ButtonBuilder()
+                .setLabel('Disable A:S:M')
+                .setCustomId('disable-asm')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true),
+            );
+
+          const embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nThe bot will begin monitoring servers.\n\`🟠\` \`Feature Disabled\``)
+            .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+          await interaction.reply({ content: 'Data Fetch Success - API Online', ephemeral: true })
+          await message.edit({ embeds: [embed], components: [button] });
+
+          await db.collection('ase-configuration').doc(interaction.guild.id).set({
+            ['status']: { asm: false }
+          }, { merge: true })
+        })
       };
     });
   },

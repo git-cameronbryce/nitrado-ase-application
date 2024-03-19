@@ -10,8 +10,8 @@ module.exports = {
   execute(client) {
     async function loop() {
 
-      let players = 0, active = 0, outage = 0;
       const gameserver = async (nitrado, statistics, services) => {
+        let players = 0, active = 0, outage = 0;
         const parse = async (gameserver) => {
           const { query, status } = gameserver;
           if (status === 'suspended') { return };

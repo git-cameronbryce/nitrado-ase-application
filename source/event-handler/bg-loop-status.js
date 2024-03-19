@@ -10,34 +10,86 @@ module.exports = {
   execute(client) {
     async function loop() {
 
-      let output = '';
-      let current = 0, total = 0;
-      const parse = async (database, suspend_date, service_id, { status, query }) => {
+      const maintenance = async (nitrado, service_id, status) => {
+        const channel = await client.channels.fetch(status.channel);
+
+        const url = `https://api.nitrado.net/services/${service_id}/gameservers/restart`;
+        const response = await axios.post(url, { message: `Obelisk Auto Restart: ${status}` }, { headers: { 'Authorization': nitrado.token } });
+        if (response.status === 200) {
+          console.log('A:S:M Restarting')
+          const embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setFooter({ text: `Tip: Contact support if there are issues.` })
+            .setDescription(`**Automatic Server Maintenance**\nOffline server, brought back online.\nServer Identifiaction #: \`${service_id}\`\n<t:${Math.floor(Date.now() / 1000)}:f>`)
+
+          await channel.send({ embeds: [embed] })
+        };
+      };
+
+      const parse = async (nitrado, status, services) => {
+        const tasks = await services.map(async service => {
+          const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
+          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+          if (response.status === 200 && platforms[response.data.data.gameserver.game] && response.data.data.gameserver.status === 'stopped') {
+            await maintenance(nitrado, service.id, status)
+          }
+        });
+      }
+
+      const gameserver = async (nitrado, status, services) => {
         try {
-          const channel = await client.channels.fetch(database.channel);
-          const message = await channel.messages.fetch(database.message);
-          const time = new Date(suspend_date).getTime() / 1000;
+          const channel = await client.channels.fetch(status.channel);
+          const message = await channel.messages.fetch(status.message);
 
-          switch (status) {
-            case 'started':
-              output += `\`🟢\` \`Service Online\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
-              break;
-            case 'restarted':
-              output += `\`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
-              break;
-            case 'updating':
-              output += `\`🟠\` \`Service Updating\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
-              break;
-            case 'stopping':
-              output += `\`🔴\` \`Service Stopping\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
-              break;
-            case 'stopped':
-              output += `\`🔴\` \`Service Stopped\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
-              break;
+          let current = 0, total = 0;
+          const actions = await Promise.all(
+            services.map(async (service) => {
+              if (platforms[service.details.folder_short]) {
+                const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
+                const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+                const { status, query } = response.data.data.gameserver;
+                const { suspend_date } = service;
 
-            default:
-              break;
-          };
+                if (status === 'started') { current += query.player_current ? query.player_current : 0, total += query.player_max ? query.player_max : 0 };
+                return { status, query, service, suspend_date };
+              }
+            })
+          );
+
+          const sortedActions = actions
+            .sort((a, b) => {
+              const playerCurrentA = a.query?.player_current || 0;
+              const playerCurrentB = b.query?.player_current || 0;
+              return playerCurrentB - playerCurrentA;
+            })
+            .filter(action => action);
+
+          let output = '';
+          sortedActions.slice(0, 15).forEach((action) => {
+            const { status, query, service, suspend_date } = action;
+            const time = new Date(suspend_date).getTime() / 1000;
+
+            switch (status) {
+              case 'started':
+                output += `\`🟢\` \`Service Online\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+                break;
+              case 'restarted':
+                output += `\`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+                break;
+              case 'updating':
+                output += `\`🟠\` \`Service Updating\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+                break;
+              case 'stopping':
+                output += `\`🔴\` \`Service Stopping\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+                break;
+              case 'stopped':
+                output += `\`🔴\` \`Service Stopped\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+                break;
+
+              default:
+                break;
+            }
+          });
 
           const button = new ActionRowBuilder()
             .addComponents(
@@ -54,7 +106,8 @@ module.exports = {
                 .setDisabled(false),
             );
 
-          const monitoring = database.asm ? '**Auto Server Maintenance**\nThis feature is activated, and offline services will be automatically restored and returned online.' : '**Auto Server Maintenance**\nThis feature is not active, offline services will not automatically be restored and returned online.';
+          console.log(status)
+          const monitoring = status.asm ? '**Auto Server Maintenance**\nThis feature is activated, and offline services will be automatically restored and returned online.' : '**Auto Server Maintenance**\nThis feature is not active, offline services will not automatically be restored and returned online.';
 
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
@@ -64,69 +117,32 @@ module.exports = {
 
           await message.edit({ embeds: [embed], components: [button] });
 
+          if (status.asm) { await parse(nitrado, status, services) }
+
         } catch (error) {
           console.log(error)
           if (error.code === 50001) console.log('Missing access'), null;
         };
       };
 
-      const maintenance = async (database, nitrado, service_id, { status }) => {
-        const channel = await client.channels.fetch(database.channel);
-
-        const url = `https://api.nitrado.net/services/${service_id}/gameservers/restart`;
-        const response = await axios.post(url, { message: `Obelisk Auto Restart: ${status}` }, { headers: { 'Authorization': nitrado.token } });
-        if (response.status === 200) {
-          console.log('A:S:M Restarting')
-          const embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setFooter({ text: `Tip: Contact support if there are issues.` })
-            .setDescription(`**Automatic Server Maintenance**\nOffline server, brought back online.\nServer Identifiaction #: \`${service_id}\`\n<t:${Math.floor(Date.now() / 1000)}:f>`)
-
-          await channel.send({ embeds: [embed] })
-        }
-      };
-
-      const gameserver = async (document, nitrado, status, services) => {
-        const statusTasks = await services.slice(0, 15).map(async service => {
-          const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-          if (response.status === 200 && platforms[response.data.data.gameserver.game]) {
-            await parse(status, service.suspend_date, service.id, response.data.data.gameserver);
-          };
-        });
-
-        const maintenanceTasks = await services.map(async service => {
-          const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-          if (response.status === 200 && platforms[response.data.data.gameserver.game] && status.asm && response.data.data.gameserver.status === 'stopped') {
-            await maintenance(status, nitrado, service.id, response.data.data.gameserver);
-          };
-        });
-
-        await Promise.all([...statusTasks, ...maintenanceTasks])
-          .then(async () => {
-            console.log(`Finished Status: ${document}`)
-          })
-      };
-
-      const service = async (document, nitrado, status) => {
+      const service = async (nitrado, status) => {
         const url = 'https://api.nitrado.net/services';
         const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
         const services = response.data.data.services;
-        response.status === 200 ? gameserver(document, nitrado, status, services) : invalidService()
+        response.status === 200 ? gameserver(nitrado, status, services) : invalidService()
       };
 
-      const token = async (document, { nitrado, status }) => {
+      const token = async ({ nitrado, status }) => {
         try {
           const url = 'https://oauth.nitrado.net/token';
           const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
-          response.status === 200 ? service(document, nitrado, status) : console.log('Invalid token');
+          response.status === 200 ? service(nitrado, status) : console.log('Invalid token');
         } catch (error) { null };
       };
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
-        doc.data() ? token(doc.id, doc.data()) : console.log('Invalid document.');
+        doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
       setTimeout(loop, 120000);
     };

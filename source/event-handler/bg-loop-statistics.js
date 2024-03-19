@@ -30,14 +30,16 @@ module.exports = {
         })
 
         await Promise.all(tasks).then(async () => {
-          const playerVoice = await client.channels.fetch(statistics.players);
-          const activeVoice = await client.channels.fetch(statistics.active);
-          const outageVoice = await client.channels.fetch(statistics.outage);
+          try {
 
-          await playerVoice.setName(`Active: ${players} Players`);
-          await activeVoice.setName(`Active: ${active} Servers`);
-          await outageVoice.setName(`Outage: ${outage} Servers`);
-          console.log('Statistics: Finished')
+            const playerVoice = await client.channels.fetch(statistics.players);
+            const activeVoice = await client.channels.fetch(statistics.active);
+            const outageVoice = await client.channels.fetch(statistics.outage);
+
+            await playerVoice.setName(`Active: ${players} Players`);
+            await activeVoice.setName(`Active: ${active} Servers`);
+            await outageVoice.setName(`Outage: ${outage} Servers`);
+          } catch (error) { null };
         })
       };
 
@@ -59,7 +61,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 60000);
+      setTimeout(loop, 60000)
     };
     loop().then(() => console.log('Loop started:'));
   },

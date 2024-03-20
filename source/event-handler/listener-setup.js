@@ -168,8 +168,22 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
+          const online = await interaction.guild.channels.create({
+            name: '📑│𝗢nline-𝗟ogging',
+            type: ChannelType.GuildForum,
+            permissionOverwrites: permissions,
+            parent: logging
+          });
+
           const admin = await interaction.guild.channels.create({
             name: '📑│𝗔dmin-𝗟ogging',
+            type: ChannelType.GuildForum,
+            permissionOverwrites: permissions,
+            parent: logging
+          });
+
+          const join = await interaction.guild.channels.create({
+            name: '📑│𝗝oin-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
@@ -185,21 +199,21 @@ module.exports = {
           const button = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
-                .setLabel('Admin Logging')
-                .setCustomId('admin-thread-modal')
+                .setLabel('Automatic Setup')
+                .setCustomId('automatic-setup')
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(false),
 
               new ButtonBuilder()
-                .setLabel('Chat Logging')
-                .setCustomId('chat-thread-modal')
+                .setLabel('Manual Setup')
+                .setCustomId('manual-setup')
                 .setStyle(ButtonStyle.Secondary)
                 .setDisabled(false),
             );
 
           embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Logging Creation Tooling**\nSelect the buttons below for those interested in utilizing our logging services and begin entering your service identifiers for each gameserver.\n\n**Additional Information**\nActive servers generate faster-flowing logs. The bot checks for new entries every 5 minutes, while some gameservers may take upwards of one hour.`)
+            .setDescription(`**Logging Creation Tooling**\nSelect the buttons below to utilize our logging services. Start with the automated setup, then begin installing the remaining manually.\n\n**Additional Information**\nActive servers generate faster-flowing logs. Nitrado may take upwards of one hour to process logs and submit them to your folder.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setImage('https://i.imgur.com/2ZIHUgx.png')
 
@@ -228,9 +242,9 @@ module.exports = {
           await db.collection('ase-configuration').doc(interaction.guild.id)
             .set({
               ['statistics']: { players: players.id, active: active.id, outage: outage.id },
+              ['forum']: { chat: chat.id, join: join.id, admin: admin.id, online: online.id },
               ['status']: { channel: status.id, message: message.id },
               ['audits']: { server: server.id, player: player.id },
-              ['forum']: { chat: chat.id, admin: admin.id },
 
               ['protections']: { channel: dupe.id }
             }, { merge: true });

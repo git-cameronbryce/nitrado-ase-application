@@ -10,7 +10,7 @@ module.exports = {
   once: true,
   execute(client) {
     async function loop() {
-      const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+\w{0,}\:\s*([\w\d]+)\s*\(\w{0,}:\s*([\w\d]+),\s*\w{0,}:\s*(\d{0,}),\s*\w{0,}:\s*(\d{0,})\)/g;
+      const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+\w{0,}\:\s*([\w\d]+)\s*\(\w{0,}:\s*([\w\d\s]+),\s*\w{0,}:\s*(\d{0,}),\s*\w{0,}:\s*(\d{0,})\)/g;
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
       const gameserver = async (document, reference, services) => {
@@ -93,7 +93,7 @@ module.exports = {
       reference.forEach(doc => {
         if (doc.data()) { token(doc.id, doc.data()) };
       });
-      setTimeout(loop, 60000);
+      setTimeout(loop, 180000);
     };
     // loop().then(() => console.log('Loop started:'));
   },

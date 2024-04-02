@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { db } = require('../script');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };

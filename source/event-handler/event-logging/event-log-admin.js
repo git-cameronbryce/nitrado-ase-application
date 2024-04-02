@@ -1,5 +1,5 @@
 const { Events, Embed, EmbedBuilder } = require('discord.js');
-const { db } = require('../script');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const data = new Set();
@@ -10,11 +10,11 @@ module.exports = {
   once: true,
   execute(client) {
     async function loop() {
-      const regex = /\[\d{0,}\.\d{0,}\.\d{0,}\-\d{0,}\.\d{0,}\.\d{0,}\:\d{0,}\]\[[\d{0,}\s{0,}]+\](\d{0,}\.\d{0,}\.\d{0,}\_\d{0,}\.\d{0,}\.\d{0,})\:\s*(\w+(?:\s\w+)*)\s*\(([\w\d\s]+)\)\:\s*([\w\d\s]+\b)/g;
+      const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+\w{0,}\:\s*([\w\d]+)\s*\(\w{0,}:\s*([\w\d]+),\s*\w{0,}:\s*(\d{0,}),\s*\w{0,}:\s*(\d{0,})\)/g;
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
       const gameserver = async (document, reference, services) => {
-        if (!reference.chat) { return };
+        if (!reference.admin) { return };
 
         const extraction = async (document, reference, service, { url }) => {
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
@@ -23,20 +23,20 @@ module.exports = {
             let counter = 0;
             let result = '', pattern = '', unique = '';
             while ((result = regex.exec(response.data)) !== null && counter <= 10) {
-              const [string, date, gamertag, username, message] = result;
+              const [string, date, command, username, arkIdentifier, steamIdentifier] = result;
               const [datePart, timePart] = date.split('_');
               const dateTimeString = `${datePart.replace(/\./g, '-')}T${timePart.replace(/\./g, ':')}`;
               const unix = Math.floor(new Date(dateTimeString).getTime() / 1000);
 
-              pattern += `<t:${unix}:f>\n**Player Identity Information**\n[${gamertag}]: ${username} \n${message} \n\n`;
+              pattern += `<t:${unix}:f>\n**Admin Identity Information**\n[${steamIdentifier}]: ${username}\n${command}\n\n`;
               if (!data.has(pattern)) {
                 data.add(pattern), counter++;
-                unique += `<t:${unix}:f>\n**Player Identity Information**\n[${gamertag}]: ${username} \n${message} \n\n`;
+                unique += `<t:${unix}:f>\n**Admin Identity Information**\n[${steamIdentifier}]: ${username}\n${command}\n\n`
               };
             };
 
             if (!unique) { return };
-            Object.entries(reference.chat).forEach(async entry => {
+            Object.entries(reference.admin).forEach(async entry => {
               if (parseInt(entry[0]) === service.id) {
                 try {
                   const channel = await client.channels.fetch(entry[1]);
@@ -49,7 +49,7 @@ module.exports = {
                 } catch (error) { null };
               };
             });
-          }
+          };
         };
 
         const path = async (document, reference, service, { game_specific: { path } }) => {
@@ -69,7 +69,7 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          console.log('Chat Finished:')
+          console.log('Admin Finished:')
         });
       };
 
@@ -77,24 +77,24 @@ module.exports = {
         try {
           const url = 'https://api.nitrado.net/services';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          response.status === 200 ? gameserver(document, reference, response.data.data.services) : unauthorized();
-        } catch (error) { unauthorized() };
+          if (response.status === 200) { gameserver(document, reference, response.data.data.services) };
+        } catch (error) { null };
       };
 
       const token = async (document, reference) => {
         try {
           const url = 'https://oauth.nitrado.net/token';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          response.status === 200 ? service(document, reference) : unauthorized();
-        } catch (error) { unauthorized() };
+          if (response.status === 200) { service(document, reference) };
+        } catch (error) { null };
       };
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
-        doc.data() ? token(doc.id, doc.data()) : console.log('Invalid document.');
+        if (doc.data()) { token(doc.id, doc.data()) };
       });
       setTimeout(loop, 60000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

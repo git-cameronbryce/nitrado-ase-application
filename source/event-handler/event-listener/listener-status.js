@@ -1,5 +1,5 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { db } = require('../script.js');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true };
@@ -256,7 +256,6 @@ module.exports = {
       };
 
       if (interaction.customId === 'enable-asm') {
-
         await interaction.guild.roles.fetch().then(async roles => {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 

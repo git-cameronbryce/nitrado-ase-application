@@ -1,5 +1,5 @@
 const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
-const { db } = require('../script.js');
+const { db } = require('../../script');
 const axios = require('axios');
 
 module.exports = {
@@ -93,21 +93,21 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          const players = await interaction.guild.channels.create({
+          const statisticsPlayers = await interaction.guild.channels.create({
             name: 'Active: 0 Players',
             type: ChannelType.GuildVoice,
             permissionOverwrites: permissions,
             parent: statistics
           });
 
-          const active = await interaction.guild.channels.create({
+          const statisticsActive = await interaction.guild.channels.create({
             name: 'Active: 0 Servers',
             type: ChannelType.GuildVoice,
             permissionOverwrites: permissions,
             parent: statistics
           });
 
-          const outage = await interaction.guild.channels.create({
+          const statisticsOutage = await interaction.guild.channels.create({
             name: 'Outage: 0 Servers',
             type: ChannelType.GuildVoice,
             permissionOverwrites: permissions,
@@ -120,7 +120,7 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          const status = await interaction.guild.channels.create({
+          const managementStatus = await interaction.guild.channels.create({
             name: '⚫️│𝗦erver-𝗦tatus',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
@@ -136,10 +136,45 @@ module.exports = {
 
           let embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Obelisk System Information**\nInformation is initialized in our database.\nProceeding with the setup process.\n\n**Collected Information**\nID: \`${status.id}\``)
+            .setDescription(`**Obelisk System Information**\nInformation is initialized in our database.\nProceeding with the setup process.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-          const message = await status.send({ embeds: [embed] });
+          const managementMessage = await managementStatus.send({ embeds: [embed] });
+
+          const metadata = await interaction.guild.channels.create({
+            name: `AS:E Player Metadata `,
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: permissions
+          });
+
+          const metadataPlayer = await interaction.guild.channels.create({
+            name: '📄│𝗣layer-𝗠etadata',
+            type: ChannelType.GuildText,
+            permissionOverwrites: permissions,
+            parent: metadata
+          });
+
+          let button = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setLabel('Gamertag Search')
+                .setCustomId('gamertag-search')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(false),
+
+              new ButtonBuilder()
+                .setLabel('Username Search')
+                .setCustomId('username-search')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(false),
+            );
+
+          embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`**Important: Gamertag Process**\nThe gamertag process is simple, wherever an in-game user joins your server, the bot will collect their online status and last known location.\n\n**Important: Username Process**\nThe username process is complex, whenever an in-game user cryopods a tame, the bot will collect their unique identifier and gamertag. \n\n**Additional Information**\nThe bot will __only__ return a result if their information was collected and stored in our database.`)
+            .setImage('https://i.imgur.com/2ZIHUgx.png');
+
+          const metadataMessage = await metadataPlayer.send({ embeds: [embed], components: [button] })
 
           const audits = await interaction.guild.channels.create({
             name: `AS:E Audit Logging`,
@@ -147,14 +182,14 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          const player = await interaction.guild.channels.create({
+          const auditsPlayer = await interaction.guild.channels.create({
             name: '📄│𝗣layer-𝗖ommands',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
             parent: audits
           });
 
-          const server = await interaction.guild.channels.create({
+          const auditsServer = await interaction.guild.channels.create({
             name: '📄│𝗦erver-𝗖ommands',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
@@ -167,35 +202,35 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          const online = await interaction.guild.channels.create({
+          const loggingOnline = await interaction.guild.channels.create({
             name: '📑│𝗢nline-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
           });
 
-          const admin = await interaction.guild.channels.create({
+          const loggingAdmin = await interaction.guild.channels.create({
             name: '📑│𝗔dmin-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
           });
 
-          const chat = await interaction.guild.channels.create({
+          const loggingChat = await interaction.guild.channels.create({
             name: '📑│𝗖hat-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
           });
 
-          const join = await interaction.guild.channels.create({
+          const loggingJoin = await interaction.guild.channels.create({
             name: '📑│𝗝oin-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
           });
 
-          const button = new ActionRowBuilder()
+          button = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
                 .setLabel('Automatic Setup')
@@ -231,7 +266,7 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          const dupe = await interaction.guild.channels.create({
+          const protectionsDupe = await interaction.guild.channels.create({
             name: '🔗│𝗗upe-𝗗etection',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
@@ -240,12 +275,12 @@ module.exports = {
 
           await db.collection('ase-configuration').doc(interaction.guild.id)
             .update({
-              ['statistics']: { players: players.id, active: active.id, outage: outage.id },
-              ['status']: { channel: status.id, message: message.id },
-              ['forum']: { chat: chat.id, join: join.id, admin: admin.id, online: online.id },
-              ['audits']: { server: server.id, player: player.id },
+              ['statistics']: { players: statisticsPlayers.id, active: statisticsActive.id, outage: statisticsOutage.id },
+              ['status']: { channel: managementStatus.id, message: managementMessage.id },
+              ['audits']: { server: auditsServer.id, player: auditsPlayer.id },
 
-              ['protections']: { channel: dupe.id }
+              ['forum']: { chat: loggingChat.id, join: loggingJoin.id, admin: loggingAdmin.id, online: loggingOnline.id },
+              ['protections']: { channel: protectionsDupe.id }
             }, { merge: true });
 
           await installation.edit({ content: 'Installation complete...', ephemeral: true });

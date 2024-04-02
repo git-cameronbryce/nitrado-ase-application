@@ -1,8 +1,8 @@
 const { Events, Embed, EmbedBuilder } = require('discord.js');
-const { db } = require('../script');
+const { db } = require('../../script');
 const axios = require('axios');
 
-const data = new Set();
+const set = new Set();
 process.on('unhandledRejection', (error) => console.error('error'));
 
 module.exports = {
@@ -10,45 +10,27 @@ module.exports = {
   once: true,
   execute(client) {
     async function loop() {
-      const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+\w{0,}\:\s*([\w\d]+)\s*\(\w{0,}:\s*([\w\d]+),\s*\w{0,}:\s*(\d{0,}),\s*\w{0,}:\s*(\d{0,})\)/g;
+      const regex = /\[\d{0,}\.\d{0,}\.\d{0,}\-\d{0,}\.\d{0,}\.\d{0,}\:\d{0,}\]\[([\d\s]+)\]\d{0,}\.\d{0,}\.\d{0,}\_\d{0,}\.\d{0,}\.\d{0,}\:\sTribe\s([\w\d\s]+)\,\s\w{0,}\s(\d{0,})\:\s[\w\d\s\,]+\:\d{0,}\:\d{2}\:\s([\w\d]+)\s[\w\d\s\-\(\)]+\[[\w\d\s\.\-\:]+]\[([\d\s]+)\][\w\s]+\:\s(\d{0,})/g;
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
       const gameserver = async (document, reference, services) => {
-        if (!reference.admin) { return };
 
         const extraction = async (document, reference, service, { url }) => {
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
           if (response.status === 200) {
 
             let counter = 0;
-            let result = '', pattern = '', unique = '';
-            while ((result = regex.exec(response.data)) !== null && counter <= 10) {
-              const [string, date, command, username, arkIdentifier, steamIdentifier] = result;
-              const [datePart, timePart] = date.split('_');
-              const dateTimeString = `${datePart.replace(/\./g, '-')}T${timePart.replace(/\./g, ':')}`;
-              const unix = Math.floor(new Date(dateTimeString).getTime() / 1000);
+            let located = false;
+            while ((result = regex.exec(response.data)) !== null && counter <= 10 && located !== true) {
+              const [string, conditionOne, tribeName, tribeIdentifier, playerUsername, conditionTwo, playerIdentifier] = result;
 
-              pattern += `<t:${unix}:f>\n**Admin Identity Information**\n[${steamIdentifier}]: ${username}\n${command}\n\n`;
-              if (!data.has(pattern)) {
-                data.add(pattern), counter++;
-                unique += `<t:${unix}:f>\n**Admin Identity Information**\n[${steamIdentifier}]: ${username}\n${command}\n\n`
-              };
+              if (!conditionOne && !conditionTwo) { return }
+              const structure = { identifier: playerIdentifier, username: playerUsername, tribe: tribeName };
+              const key = JSON.stringify(structure);
+
+              if (!set.has(key)) { set.add(key) };
+              counter++
             };
-
-            if (!unique) { return };
-            Object.entries(reference.admin).forEach(async entry => {
-              if (parseInt(entry[0]) === service.id) {
-                try {
-                  const channel = await client.channels.fetch(entry[1]);
-                  const embed = new EmbedBuilder()
-                    .setColor('#2ecc71')
-                    .setFooter({ text: `Tip: Contact support if there are issues.` })
-                    .setDescription(`${unique}`);
-
-                  await channel.send({ embeds: [embed] });
-                } catch (error) { null };
-              };
-            });
           };
         };
 
@@ -69,7 +51,12 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          console.log('Admin Finished:')
+          console.log('Collector Finished:')
+          set.forEach(async key => {
+            const structure = JSON.parse(key);
+            const data = { [structure.identifier]: { username: structure.username, tribe: structure.tribe } };
+            await db.collection('ase-collector').doc(document).set(data, { merge: true });
+          })
         });
       };
 
@@ -77,21 +64,21 @@ module.exports = {
         try {
           const url = 'https://api.nitrado.net/services';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          if (response.status === 200) { gameserver(document, reference, response.data.data.services) };
-        } catch (error) { null };
+          response.status === 200 ? gameserver(document, reference, response.data.data.services) : unauthorized();
+        } catch (error) { unauthorized() };
       };
 
       const token = async (document, reference) => {
         try {
           const url = 'https://oauth.nitrado.net/token';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          if (response.status === 200) { service(document, reference) };
-        } catch (error) { null };
+          response.status === 200 ? service(document, reference) : unauthorized();
+        } catch (error) { unauthorized() };
       };
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
-        if (doc.data()) { token(doc.id, doc.data()) };
+        doc.data() ? token(doc.id, doc.data()) : console.log('Invalid document.');
       });
       setTimeout(loop, 60000);
     };

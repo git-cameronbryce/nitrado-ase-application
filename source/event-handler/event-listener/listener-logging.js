@@ -1,5 +1,5 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
-const { db } = require('../script.js');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };

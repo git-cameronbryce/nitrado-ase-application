@@ -4,7 +4,7 @@ const axios = require('axios');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('ase-player-search')
+    .setName('ase-player-gamertag-search')
     .setDescription('Performs an in-game search action.')
     .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true))
     .addStringOption(option => option.setName('search-algorithm').setDescription('Algorithm to return usernames.').setRequired(true)

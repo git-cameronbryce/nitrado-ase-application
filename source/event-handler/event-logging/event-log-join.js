@@ -1,5 +1,5 @@
 const { Events, Embed, EmbedBuilder } = require('discord.js');
-const { db } = require('../script');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const data = new Set();
@@ -108,6 +108,6 @@ module.exports = {
       });
       setTimeout(loop, 60000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

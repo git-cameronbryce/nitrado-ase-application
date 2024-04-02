@@ -1,5 +1,5 @@
 const { Events, Embed, EmbedBuilder } = require('discord.js');
-const { db } = require('../script');
+const { db } = require('../../script');
 const axios = require('axios');
 
 const data = new Set();

@@ -2,8 +2,7 @@ const { Events, Embed, EmbedBuilder } = require('discord.js');
 const { db } = require('../script');
 const axios = require('axios');
 
-const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
-
+const data = new Set();
 process.on('unhandledRejection', (error) => console.error('error'));
 
 module.exports = {
@@ -11,27 +10,45 @@ module.exports = {
   once: true,
   execute(client) {
     async function loop() {
+      const regex = /\[\d{0,}\.\d{0,}\.\d{0,}\-\d{0,}\.\d{0,}\.\d{0,}\:\d{0,}\]\[[\d{0,}\s{0,}]+\](\d{0,}\.\d{0,}\.\d{0,}\_\d{0,}\.\d{0,}\.\d{0,})\:\s*(\w+(?:\s\w+)*)\s*\(([\w\d\s]+)\)\:\s*([\w\d\s]+\b)/g;
+      const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
+
       const gameserver = async (document, reference, services) => {
         if (!reference.chat) { return };
 
-        let output = '';
-        let counter = 0;
-        const extraction = async (document, reference, { url }) => {
+        const extraction = async (document, reference, service, { url }) => {
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
           if (response.status === 200) {
-            const regex = /\[\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3}\]\[\s*\d+\](\d{4}\.\d{2}\.\d{2}_\d{2}\.\d{2}\.\d{2}):\s*(\w+)\s*(\(.{0,}\)):\s*(.*)/g;
 
-            let match;
-            while ((match = regex.exec(response.data)) !== null && counter <= 10) {
-              const [string, date, gamertag, username, message] = match;
-
+            let counter = 0;
+            let result = '', pattern = '', unique = '';
+            while ((result = regex.exec(response.data)) !== null && counter <= 10) {
+              const [string, date, gamertag, username, message] = result;
               const [datePart, timePart] = date.split('_');
               const dateTimeString = `${datePart.replace(/\./g, '-')}T${timePart.replace(/\./g, ':')}`;
               const unix = Math.floor(new Date(dateTimeString).getTime() / 1000);
 
-              output += `<t:${unix}:f>\n**Player Identity Information**\n[${gamertag}]: ${username}\n${message}\n\n`;
-              counter++
-            }
+              pattern += `<t:${unix}:f>\n**Player Identity Information**\n[${gamertag}]: ${username} \n${message} \n\n`;
+              if (!data.has(pattern)) {
+                data.add(pattern), counter++;
+                unique += `<t:${unix}:f>\n**Player Identity Information**\n[${gamertag}]: ${username} \n${message} \n\n`;
+              };
+            };
+
+            if (!unique) { return };
+            Object.entries(reference.chat).forEach(async entry => {
+              if (parseInt(entry[0]) === service.id) {
+                try {
+                  const channel = await client.channels.fetch(entry[1]);
+                  const embed = new EmbedBuilder()
+                    .setColor('#2ecc71')
+                    .setFooter({ text: `Tip: Contact support if there are issues.` })
+                    .setDescription(`${unique}`);
+
+                  await channel.send({ embeds: [embed] });
+                } catch (error) { null };
+              };
+            });
           }
         };
 
@@ -39,7 +56,7 @@ module.exports = {
           try {
             const url = `https://api.nitrado.net/services/${service.id}/gameservers/file_server/download?file=${path}/ShooterGame/Saved/Logs/ShooterGame.log`;
             const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            if (response.status === 200) { await extraction(document, reference, response.data.data.token); };
+            if (response.status === 200) { await extraction(document, reference, service, response.data.data.token); };
           } catch (error) { null };
         };
 
@@ -52,21 +69,7 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          const entries = Object.entries(reference.chat);
-          entries.forEach(async entry => {
-            try {
-              const channel = await client.channels.fetch(entry[1]);
-              console.log(channel)
-              const embed = new EmbedBuilder()
-                .setColor('#2ecc71')
-                .setFooter({ text: `Tip: Contact support if there are issues.` })
-                .setDescription(`${output}`);
-
-              await channel.send({ embeds: [embed] });
-            } catch (error) {
-              if (error.code === 10003) { console.log('Missing access:') }
-            };
-          });
+          console.log('Chat Finished:')
         });
       };
 

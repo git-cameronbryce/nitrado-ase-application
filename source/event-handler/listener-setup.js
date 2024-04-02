@@ -120,15 +120,15 @@ module.exports = {
             permissionOverwrites: permissions
           });
 
-          await interaction.guild.channels.create({
-            name: '⚫│𝗕ot-𝗖ommands',
+          const status = await interaction.guild.channels.create({
+            name: '⚫️│𝗦erver-𝗦tatus',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
             parent: management
           });
 
-          const status = await interaction.guild.channels.create({
-            name: '⚫│𝗦erver-𝗦tatus',
+          await interaction.guild.channels.create({
+            name: '⚫│𝗖ommands',
             type: ChannelType.GuildText,
             permissionOverwrites: permissions,
             parent: management
@@ -136,9 +136,8 @@ module.exports = {
 
           let embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Cluster Status Installation**\nThe status page is currently being installed. \nBelow is the expected processing timer. \n\nEstimated: <t:${Math.floor(Date.now() / 1000) + 300}:R>`)
+            .setDescription(`**Obelisk System Information**\nInformation is initialized in our database.\nProceeding with the setup process.\n\n**Collected Information**\nID: \`${status.id}\``)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setImage('https://i.imgur.com/2ZIHUgx.png')
 
           const message = await status.send({ embeds: [embed] });
 
@@ -182,15 +181,15 @@ module.exports = {
             parent: logging
           });
 
-          const join = await interaction.guild.channels.create({
-            name: '📑│𝗝oin-𝗟ogging',
+          const chat = await interaction.guild.channels.create({
+            name: '📑│𝗖hat-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
           });
 
-          const chat = await interaction.guild.channels.create({
-            name: '📑│𝗖hat-𝗟ogging',
+          const join = await interaction.guild.channels.create({
+            name: '📑│𝗝oin-𝗟ogging',
             type: ChannelType.GuildForum,
             permissionOverwrites: permissions,
             parent: logging
@@ -208,7 +207,7 @@ module.exports = {
                 .setLabel('Manual Setup')
                 .setCustomId('manual-setup')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(false),
+                .setDisabled(true),
             );
 
           embed = new EmbedBuilder()
@@ -240,10 +239,10 @@ module.exports = {
           });
 
           await db.collection('ase-configuration').doc(interaction.guild.id)
-            .set({
+            .update({
               ['statistics']: { players: players.id, active: active.id, outage: outage.id },
-              ['forum']: { chat: chat.id, join: join.id, admin: admin.id, online: online.id },
               ['status']: { channel: status.id, message: message.id },
+              ['forum']: { chat: chat.id, join: join.id, admin: admin.id, online: online.id },
               ['audits']: { server: server.id, player: player.id },
 
               ['protections']: { channel: dupe.id }

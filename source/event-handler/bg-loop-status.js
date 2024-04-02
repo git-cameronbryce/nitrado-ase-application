@@ -16,7 +16,6 @@ module.exports = {
         const url = `https://api.nitrado.net/services/${service_id}/gameservers/restart`;
         const response = await axios.post(url, { message: `Obelisk Auto Restart: ${status}` }, { headers: { 'Authorization': nitrado.token } });
         if (response.status === 200) {
-          console.log('A:S:M Restarting')
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
             .setFooter({ text: `Tip: Contact support if there are issues.` })
@@ -73,7 +72,7 @@ module.exports = {
               case 'started':
                 output += `\`🟢\` \`Service Online\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
                 break;
-              case 'restarted':
+              case 'restarting':
                 output += `\`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Data Fetch Error - API Outage'}\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
                 break;
               case 'updating':
@@ -106,7 +105,6 @@ module.exports = {
                 .setDisabled(false),
             );
 
-          console.log(status)
           const monitoring = status.asm ? '**Auto Server Maintenance**\nThis feature is activated, and offline services will be automatically restored and returned online.' : '**Auto Server Maintenance**\nThis feature is not active, offline services will not automatically be restored and returned online.';
 
           const embed = new EmbedBuilder()
@@ -120,7 +118,6 @@ module.exports = {
           if (status.asm) { await parse(nitrado, status, services) }
 
         } catch (error) {
-          console.log(error)
           if (error.code === 50001) console.log('Missing access'), null;
         };
       };

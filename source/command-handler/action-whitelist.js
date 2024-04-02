@@ -49,7 +49,6 @@ module.exports = {
             const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/whitelist`;
             const response = await axios.post(url, { identifier: input.username }, { headers: { 'Authorization': reference.nitrado.token } });
             response.status === 200 ? success++ : unauthorized();
-            console.log(response.data.data.message);
           } catch (error) { if (error.response.data.message === "Can't add the user to the whitelist.") { success++ }; };
         };
 
@@ -72,7 +71,7 @@ module.exports = {
             const embed = new EmbedBuilder()
               .setColor('#2ecc71')
               .setFooter({ text: `Tip: Contact support if there are issues.` })
-              .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-whitelist\`\n\n**ID: ${interaction.user.id}**`);
+              .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-whitelist\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
 
             const channel = await interaction.client.channels.fetch(reference.audits.player);
             await channel.send({ embeds: [embed] });

@@ -78,7 +78,7 @@ module.exports = {
                   const embed = new EmbedBuilder()
                     .setColor('#2ecc71')
                     .setFooter({ text: `Tip: Contact support if there are issues.` })
-                    .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-ban\`\n\n**ID: ${interaction.user.id}**`);
+                    .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-ban\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
 
                   const channel = await interaction.client.channels.fetch(reference.audits.player);
                   await channel.send({ embeds: [embed] });

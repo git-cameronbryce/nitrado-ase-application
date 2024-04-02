@@ -2,8 +2,7 @@ const { Events, Embed, EmbedBuilder } = require('discord.js');
 const { db } = require('../script');
 const axios = require('axios');
 
-const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
-
+const data = new Set();
 process.on('unhandledRejection', (error) => console.error('error'));
 
 module.exports = {
@@ -11,38 +10,58 @@ module.exports = {
   once: true,
   execute(client) {
     async function loop() {
+      const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+(\w{0,})\s*(\w{0,})\s*\w{0,}\s*ARK/g;
+      const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
+
       const gameserver = async (document, reference, services) => {
         if (!reference.join) { return };
-
-        let output = '';
-        let counter = 0;
-        const extraction = async (document, reference, { url }) => {
+        const extraction = async (document, reference, service, { url }) => {
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
           if (response.status === 200) {
-            const regex = /.\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.\d{3}..\d{3}.(\d{4}.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}).\s+(\w{0,})\s*(\w{0,})\s*\w{0,}\s*ARK/g;
 
-            let match;
-            while ((match = regex.exec(response.data)) !== null && counter < 10) {
-              const [string, date, gamertag, condition] = match;
-
+            let counter = 0;
+            let result = '', pattern = '', unique = '';
+            while ((result = regex.exec(response.data)) !== null && counter <= 10) {
+              const [string, date, gamertag, condition] = result;
               const [datePart, timePart] = date.split('_');
               const dateTimeString = `${datePart.replace(/\./g, '-')}T${timePart.replace(/\./g, ':')}`;
-              const unixTimestamp = Math.floor(new Date(dateTimeString).getTime() / 1000);
+              const unix = Math.floor(new Date(dateTimeString).getTime() / 1000);
 
               switch (condition) {
                 case 'joined':
-                  output += `**Obelisk AS:E Gameserver**\n\`🔐\` 31.214.239.131:10035\n\n<t:${unixTimestamp}:F>\n\`\`\`\n🟢 ${gamertag} joined your server!\n\`\`\`\n`;
-                  counter++;
+                  pattern += `<t:${unix}:F>\n\`\`\`\n🟢 ${gamertag} joined your server!\n\`\`\`\n`;
+                  if (!data.has(pattern)) {
+                    data.add(pattern), counter++;
+                    unique += `<t:${unix}:F>\n\`\`\`\n🟢 ${gamertag} joined your server!\n\`\`\`\n`;
+                  };
                   break;
                 case 'left':
-                  output += `**Obelisk AS:E Gameserver**\n\`🔐\` 31.214.239.131:10035\n\n<t:${unixTimestamp}:F>\n\`\`\`\n🟠 ${gamertag} left your server!\n\`\`\`\n`;
-                  counter++;
+                  pattern += `<t:${unix}:F>\n\`\`\`\n🟠 ${gamertag} left your server!\n\`\`\`\n`;
+                  if (!data.has(pattern)) {
+                    data.add(pattern), counter++;
+                    unique += `<t:${unix}:F>\n\`\`\`\n🟠 ${gamertag} left your server!\n\`\`\`\n`;
+                  };
                   break;
 
                 default:
                   break;
               };
             };
+
+            if (!unique) { return };
+            Object.entries(reference.join).forEach(async entry => {
+              if (parseInt(entry[0]) === service.id) {
+                try {
+                  const channel = await client.channels.fetch(entry[1]);
+                  const embed = new EmbedBuilder()
+                    .setColor('#2ecc71')
+                    .setFooter({ text: `Tip: Contact support if there are issues.` })
+                    .setDescription(`${unique}`);
+
+                  await channel.send({ embeds: [embed] });
+                } catch (error) { null };
+              };
+            });
           };
         };
 
@@ -50,7 +69,7 @@ module.exports = {
           try {
             const url = `https://api.nitrado.net/services/${service.id}/gameservers/file_server/download?file=${path}/ShooterGame/Saved/Logs/ShooterGame.log`;
             const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            if (response.status === 200) { await extraction(document, reference, response.data.data.token); };
+            if (response.status === 200) { await extraction(document, reference, service, response.data.data.token); };
           } catch (error) { null };
         };
 
@@ -63,16 +82,7 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          const entries = Object.entries(reference.join);
-          entries.forEach(async entry => {
-            const channel = await client.channels.fetch(entry[1]);
-            const embed = new EmbedBuilder()
-              .setColor('#2ecc71')
-              .setFooter({ text: `Tip: Contact support if there are issues.` })
-              .setDescription(`${output}`);
-
-            await channel.send({ embeds: [embed] });
-          });
+          console.log('Join Finished:')
         });
       };
 

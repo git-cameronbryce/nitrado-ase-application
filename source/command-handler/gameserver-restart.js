@@ -66,7 +66,7 @@ module.exports = {
               const embed = new EmbedBuilder()
                 .setColor('#2ecc71')
                 .setFooter({ text: `Tip: Contact support if there are issues.` })
-                .setDescription(`**Server Command Logging**\nGameserver action completed.\n\`/ase-gameserver-restart\`\n\n**ID: ${interaction.user.id}**`);
+                .setDescription(`**Server Command Logging**\nGameserver action completed.\n\`/ase-gameserver-restart\`\n\`${input.identifier}\`\n\n**ID: ${interaction.user.id}**`);
 
               const channel = await interaction.client.channels.fetch(reference.audits.server);
               await channel.send({ embeds: [embed] });

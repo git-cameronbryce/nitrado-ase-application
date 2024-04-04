@@ -12,20 +12,33 @@ module.exports = {
     client.on(Events.InteractionCreate, async interaction => {
 
       if (interaction.customId === 'gamertag-search') {
-        const modal = new ModalBuilder()
-          .setCustomId('gamertag-modal')
-          .setTitle('Obelisk Search Tooling');
+        await interaction.guild.roles.fetch().then(async roles => {
+          const role = roles.find(role => role.name === 'Obelisk Permission');
 
-        const row = new ActionRowBuilder()
-          .addComponents(
-            new TextInputBuilder()
-              .setCustomId('gamertag-option').setLabel('Required Gamertag Input').setMinLength(0).setMaxLength(20)
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-          );
+          if (!role || !interaction.member.roles.cache.has(role.id)) {
+            const embed = new EmbedBuilder()
+              .setColor('#e67e22')
+              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-        modal.addComponents(row);
-        await interaction.showModal(modal);
+            return interaction.followUp({ embeds: [embed], ephemeral: true });
+          };
+
+          const modal = new ModalBuilder()
+            .setCustomId('gamertag-modal')
+            .setTitle('Obelisk Search Tooling');
+
+          const row = new ActionRowBuilder()
+            .addComponents(
+              new TextInputBuilder()
+                .setCustomId('gamertag-option').setLabel('Required Gamertag Input').setMinLength(0).setMaxLength(20)
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+            );
+
+          modal.addComponents(row);
+          await interaction.showModal(modal);
+        });
       };
 
       if (interaction.customId === 'gamertag-modal') {

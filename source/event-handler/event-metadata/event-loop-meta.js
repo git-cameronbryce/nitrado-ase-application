@@ -2,8 +2,9 @@ const { Events, Embed, EmbedBuilder } = require('discord.js');
 const { db } = require('../../script');
 const axios = require('axios');
 
-const set = new Set();
 process.on('unhandledRejection', (error) => console.error('error'));
+
+const set = new Set();
 
 module.exports = {
   name: Events.ClientReady,
@@ -13,24 +14,23 @@ module.exports = {
       const regex = /\[\d{0,}\.\d{0,}\.\d{0,}\-\d{0,}\.\d{0,}\.\d{0,}\:\d{0,}\]\[([\d\s]+)\]\d{0,}\.\d{0,}\.\d{0,}\_\d{0,}\.\d{0,}\.\d{0,}\:\sTribe\s([\w\d\s]+)\,\s\w{0,}\s(\d{0,})\:\s[\w\d\s\,]+\:\d{0,}\:\d{2}\:\s([\w\d]+)\s[\w\d\s\-\(\)]+\[[\w\d\s\.\-\:]+]\[([\d\s]+)\][\w\s]+\:\s(\d{0,})/g;
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
+      const players = [];
       const gameserver = async (document, reference, services) => {
+        const playerRef = (await db.collection('ase-collection').doc(document).get()).data();
+
+        if (!playerRef) { return };
+        Object.entries(playerRef).forEach(player => players.push(player[1].username));
 
         const extraction = async (document, reference, service, { url }) => {
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          if (response.status === 200) {
+          if (!response.status === 200) { return };
 
-            let counter = 0;
-            let located = false;
-            while ((result = regex.exec(response.data)) !== null && counter <= 10 && located !== true) {
-              const [string, conditionOne, tribeName, tribeIdentifier, playerUsername, conditionTwo, playerIdentifier] = result;
+          let counter = 0;
+          while ((result = regex.exec(response.data)) !== null) {
+            const [string, conditionOne, tribeName, tribeIdentifier, playerUsername, conditionTwo, playerIdentifier] = result;
 
-              if (!conditionOne && !conditionTwo) { return }
-              const structure = { identifier: playerIdentifier, username: playerUsername, tribe: tribeName };
-              const key = JSON.stringify(structure);
-
-              if (!set.has(key)) { set.add(key) };
-              counter++
-            };
+            if (!conditionOne && !conditionTwo) { return };
+            players.push({ username: playerUsername, identifier: playerIdentifier });
           };
         };
 
@@ -51,12 +51,7 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          console.log('Collector Finished:')
-          set.forEach(async key => {
-            const structure = JSON.parse(key);
-            const data = { [structure.identifier]: { username: structure.username, tribe: structure.tribe } };
-            await db.collection('ase-collector').doc(document).set(data, { merge: true });
-          })
+
         });
       };
 
@@ -65,7 +60,7 @@ module.exports = {
           const url = 'https://api.nitrado.net/services';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
           response.status === 200 ? gameserver(document, reference, response.data.data.services) : unauthorized();
-        } catch (error) { unauthorized() };
+        } catch (error) { null };
       };
 
       const token = async (document, reference) => {
@@ -73,14 +68,14 @@ module.exports = {
           const url = 'https://oauth.nitrado.net/token';
           const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
           response.status === 200 ? service(document, reference) : unauthorized();
-        } catch (error) { unauthorized() };
+        } catch (error) { null };
       };
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
         doc.data() ? token(doc.id, doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 60000);
+      setTimeout(loop, 180000);
     };
     loop().then(() => console.log('Loop started:'));
   },

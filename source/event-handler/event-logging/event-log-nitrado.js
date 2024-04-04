@@ -1,8 +1,12 @@
 const { Events, Embed, EmbedBuilder } = require('discord.js');
+const { adminExtractionLogic } = require('./logging-logic/module-admin');
+const { chatExtractionLogic } = require('./logging-logic/module-chat');
+const { joinExtractionLogic } = require('./logging-logic/module-join');
+
 const { db } = require('../../script');
 const axios = require('axios');
 
-const data = new Set();
+
 process.on('unhandledRejection', (error) => console.error('error'));
 
 module.exports = {
@@ -12,38 +16,38 @@ module.exports = {
     async function loop() {
       const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
+      const adminExtraction = async (reference, service, response) => {
+        await adminExtractionLogic(reference, service, response, client);
+      };
+      const chatExtraction = async (reference, service, response) => {
+        await chatExtractionLogic(reference, service, response, client);
+      };
+      const joinExtraction = async (reference, service, response) => {
+        await joinExtractionLogic(reference, service, response, client);
+      };
+
       const gameserver = async (reference, services) => {
-        if (!reference.online) { return };
+        const extraction = async (reference, service, { url }) => {
+          const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+          if (!response.status === 200) { return };
 
-        const extraction = async (service, players) => {
-          let output = '';
-          players.forEach(player => player.online === true ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${player.id}\n\`🔗\` ${player.name}\n\n` : null);
-
-          Object.entries(reference.online).forEach(async entry => {
-            if (parseInt(entry[0]) === service.id) {
-              try {
-                const channel = await client.channels.fetch(entry[1].thread);
-                const message = await channel.messages.fetch(entry[1].message);
-
-                const embed = new EmbedBuilder()
-                  .setColor('#2ecc71')
-                  .setFooter({ text: `Tip: Contact support if there are issues.` })
-                  .setDescription(`${output.length > 1 ? `${output}Obelisk is watching for gameservers.\nScanned \`1\` of \`1\` updates.\n<t:${Math.floor(Date.now() / 1000)}:R>` : `**Additional Information**\nCurrently, there are zero players online.\n\nObelisk is monitoring for updates.\nScanned \`1\` of \`1\` gameservers.\n<t:${Math.floor(Date.now() / 1000)}:R>`}`);
-
-                await message.edit({ embeds: [embed] });
-              } catch (error) {
-                if (error.code === 10003) { console.log('Missing Access') };
-              };
-            };
-          });
-
-
+          if (Object.keys(reference.admin)) {
+            await adminExtraction(reference, service, response.data);
+          };
+          if (Object.keys(reference.chat)) {
+            await chatExtraction(reference, service, response.data);
+          };
+          if (Object.keys(reference.join)) {
+            await joinExtraction(reference, service, response.data);
+          };
         };
 
-        const path = async (reference, service) => {
-          const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/players`;
-          const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-          if (response.status === 200) { await extraction(service, response.data.data.players) }
+        const path = async (reference, service, { game_specific: { path } }) => {
+          try {
+            const url = `https://api.nitrado.net/services/${service.id}/gameservers/file_server/download?file=${path}/ShooterGame/Saved/Logs/ShooterGame.log`;
+            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+            if (response.status === 200) { await extraction(reference, service, response.data.data.token); };
+          } catch (error) { null };
         };
 
         const tasks = await services.map(async service => {
@@ -55,7 +59,7 @@ module.exports = {
         });
 
         await Promise.all(tasks).then(async () => {
-          console.log('Online Finished:')
+          console.log('Logging Finished:')
         });
       };
 
@@ -76,7 +80,7 @@ module.exports = {
       };
 
       const reference = await db.collection('ase-configuration').get();
-      reference.forEach(async doc => {
+      reference.forEach(doc => {
         if (doc.data()) { token(doc.data()) };
       });
       setTimeout(loop, 180000);

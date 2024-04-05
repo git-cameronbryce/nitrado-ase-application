@@ -3,7 +3,7 @@ const data = new Set();
 
 const joinExtractionLogic = async (reference, service, response, client) => {
   const regex = /\[\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3}\]\[\s*\d+\]([\d.]+_[\d.]+): (\S+(?: \S+)*) \(([^()]+)\): (.+)/g;
-
+  console.log('Join')
   try {
     let counter = 0;
     let result = '', pattern = '', unique = '';
@@ -32,11 +32,11 @@ const joinExtractionLogic = async (reference, service, response, client) => {
 
           await channel.send({ embeds: [embed] });
         } catch (error) {
-          if (error.code === 10003) { console.log('Missing Access') };
+          if (error.code === 10003) { null };
         };
       };
     });
-  } catch (error) { console.log(error) };
+  } catch (error) { null };
 };
 
 module.exports = { joinExtractionLogic };

@@ -3,7 +3,7 @@ const data = new Set();
 
 const adminExtractionLogic = async (reference, service, response, client) => {
   const regex = /(\d{4}\.\d{2}\.\d{2}_\d{2}\.\d{2}\.\d{2}): AdminCmd: (.*?) \(PlayerName: (.+?), ARKID: (\d+), SteamID: (\d+)/g;
-
+  console.log('Admin')
   try {
     let counter = 0;
     let result = '', pattern = '', unique = '';
@@ -32,11 +32,11 @@ const adminExtractionLogic = async (reference, service, response, client) => {
 
           await channel.send({ embeds: [embed] });
         } catch (error) {
-          if (error.code === 10003) { console.log('Missing Access') };
+          if (error.code === 10003) { null };
         };
       };
     });
-  } catch (error) { console.log(error) };
+  } catch (error) { null };
 };
 
 module.exports = { adminExtractionLogic };

@@ -1,8 +1,13 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const rateLimit = require('axios-rate-limit');
 const { db } = require('../../script');
 const axios = require('axios');
 
-const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
+process.on('unhandledRejection', (error) => console.error(error));
+
+const platforms = { arkxb: true, arkps: true, arkse: true };
+
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0500 }); // 1 request per second
 
 module.exports = {
   name: Events.ClientReady,
@@ -14,7 +19,7 @@ module.exports = {
         const channel = await client.channels.fetch(status.channel);
 
         const url = `https://api.nitrado.net/services/${service_id}/gameservers/restart`;
-        const response = await axios.post(url, { message: `Obelisk Auto Restart: ${status}` }, { headers: { 'Authorization': nitrado.token } });
+        const response = await api.post(url, { message: `Obelisk Auto Restart: ${status}` }, { headers: { 'Authorization': nitrado.token } });
         if (response.status === 200) {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
@@ -28,7 +33,7 @@ module.exports = {
       const parse = async (nitrado, status, services) => {
         const tasks = await services.map(async service => {
           const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+          const response = await api.get(url, { headers: { 'Authorization': nitrado.token } });
           if (response.status === 200 && platforms[response.data.data.gameserver.game] && response.data.data.gameserver.status === 'stopped') {
             await maintenance(nitrado, service.id, status)
           }
@@ -45,7 +50,7 @@ module.exports = {
             services.map(async (service) => {
               if (platforms[service.details.folder_short]) {
                 const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-                const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+                const response = await api.get(url, { headers: { 'Authorization': nitrado.token } });
                 const { status, query } = response.data.data.gameserver;
                 const { suspend_date } = service;
 
@@ -117,23 +122,21 @@ module.exports = {
 
           if (status.asm) { await parse(nitrado, status, services) }
 
-        } catch (error) {
-          if (error.code === 50001) console.log('Missing access'), null;
-        };
+        } catch (error) { null };
       };
 
       const service = async (nitrado, status) => {
         const url = 'https://api.nitrado.net/services';
-        const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
+        const response = await api.get(url, { headers: { 'Authorization': nitrado.token } })
         const services = response.data.data.services;
-        response.status === 200 ? gameserver(nitrado, status, services) : invalidService()
+        if (response.status === 200) { gameserver(nitrado, status, services) };
       };
 
       const token = async ({ nitrado, status }) => {
         try {
           const url = 'https://oauth.nitrado.net/token';
-          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
-          response.status === 200 ? service(nitrado, status) : console.log('Invalid token');
+          const response = await api.get(url, { headers: { 'Authorization': nitrado.token } })
+          if (response.status === 200) { service(nitrado, status) };
         } catch (error) { null };
       };
 
@@ -141,7 +144,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 120000);
+      setTimeout(loop, 150000);
     };
     loop().then(() => console.log('Loop started:'));
   },

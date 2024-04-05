@@ -77,6 +77,6 @@ module.exports = {
       });
       setTimeout(loop, 180000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

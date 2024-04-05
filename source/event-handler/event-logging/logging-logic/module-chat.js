@@ -32,11 +32,11 @@ const chatExtractionLogic = async (reference, service, response, client) => {
 
           await channel.send({ embeds: [embed] });
         } catch (error) {
-          if (error.code === 10003) { console.log('Missing Access') };
+          if (error.code === 10003) { null };
         };
       };
     });
-  } catch (error) { console.log(error) };
+  } catch (error) { null };
 };
 
 module.exports = { chatExtractionLogic };

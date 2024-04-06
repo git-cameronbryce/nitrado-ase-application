@@ -36,20 +36,20 @@ module.exports = {
             const button = new ActionRowBuilder()
               .addComponents(
                 new ButtonBuilder()
-                  .setLabel('Base Version')
-                  .setCustomId('base-version')
-                  .setStyle(ButtonStyle.Success),
+                  .setLabel('Continue Installation')
+                  .setCustomId('continue-installation')
+                  .setStyle(ButtonStyle.Success)
+                  .setDisabled(false),
 
                 new ButtonBuilder()
-                  .setLabel('Upgraded Version')
-                  .setCustomId('upgraded-version')
-                  .setStyle(ButtonStyle.Secondary)
-                  .setDisabled(true),
+                  .setURL('https://donate.stripe.com/4gwbJm39u6oD3YcaEF')
+                  .setLabel('Donation')
+                  .setStyle(ButtonStyle.Link),
               );
 
             const embed = new EmbedBuilder()
               .setColor('#2ecc71')
-              .setDescription(`**Token Creation & Overview**\n For those interested in upgrading to our more advanced tooling, the payment __must__ be done before installation, the base version is free.\n\n**Additional Information**\nSelect the upgrade button below for those who want our premium version. After the payment, press it again for a seamless transition.\n\n__Premium temporarily disabled.__ \n\n**[Partnership & Information](https://nitra.do/obeliskdevelopment "Nitrado Partner Link")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
+              .setDescription(`**Token Creation & Overview**\nFor those interested in supporting our development directly, consider donating or upgrading to our paid version after installation.\n\n**Additional Information**\nWe balance stability then features, in that order. The core of our service is free, but the resource and request-heavy features will require payment. \n\n**[Partnership & Information](https://nitra.do/obeliskdevelopment \"Nitrado Partner Link\")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
               .setImage('https://i.imgur.com/2ZIHUgx.png')
 
@@ -64,13 +64,13 @@ module.exports = {
 
             const url = 'https://oauth.nitrado.net/token';
             const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-            response.status === 200 && interaction.guild.features.includes('COMMUNITY')
+            response.status === 200 && interaction.guild.features.includes('COMMUNITY') && response.data.data.token.scopes[0] === 'service'
               ? validToken(nitrado) : invalidToken();
 
-          } catch (error) { invalidToken(), null; }
+          } catch (error) { invalidToken(), null };
         };
 
-        if (interaction.customId === 'base-version') {
+        if (interaction.customId === 'continue-installation') {
           const installation = await interaction.reply({ content: 'Installing...', ephemeral: true });
 
           const roles = await interaction.guild.roles.fetch();
@@ -171,7 +171,7 @@ module.exports = {
 
           embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Important: Gamertag Process**\nThe gamertag process is simple, wherever an in-game user joins your server, the bot will collect their online status and last known location.\n\n**Important: Username Process**\nThe username process is complex, whenever an in-game user cryopods a tame, the bot will collect their unique identifier and gamertag. \n\n**Additional Information**\nThe bot will __only__ return a result if their information was collected and stored in our database.`)
+            .setDescription('**Additional Information**\nYou do __not__ need to type their full tag or username. The bot will filter and return any matching values, case sensitivity does not matter.\n\n**Gamertag Searching**\nUsers will be collected and stored in our database whenever they join your cluster—allowing you to look up their gamertag to fetch information.\n\n**Username Searching**\nUsers will be collected and stored in our database whenever they cryopod a tame—allowing you to look up their in-game name to fetch information.')
             .setImage('https://i.imgur.com/2ZIHUgx.png');
 
           const metadataMessage = await metadataPlayer.send({ embeds: [embed], components: [button] })

@@ -5,7 +5,7 @@ const axios = require('axios');
 
 process.on('unhandledRejection', (error) => console.error(error));
 
-const platforms = { arkxb: true, arkps: true, arkse: true };
+const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
 const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0500 }); // 1 request per second
 

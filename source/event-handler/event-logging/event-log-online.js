@@ -6,16 +6,13 @@ const axios = require('axios');
 process.on('unhandledRejection', (error) => console.error(error));
 
 const platforms = { arkxb: true, arkps: true, arkse: true };
-
-const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 1000 }); // 1 request per second
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0250 });
 
 module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
     async function loop() {
-      const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
-
       const gameserver = async (reference, services) => {
         if (!reference.online) { return };
 
@@ -83,6 +80,6 @@ module.exports = {
       });
       setTimeout(loop, 180000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

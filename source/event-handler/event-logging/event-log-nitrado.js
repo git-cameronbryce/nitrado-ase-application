@@ -1,27 +1,21 @@
-const { Events, Embed, EmbedBuilder } = require('discord.js');
+const { Events } = require('discord.js');
 const { adminExtractionLogic } = require('./logging-logic/module-admin');
 const { chatExtractionLogic } = require('./logging-logic/module-chat');
 const { joinExtractionLogic } = require('./logging-logic/module-join');
-
 const rateLimit = require('axios-rate-limit');
 const { db } = require('../../script');
 const axios = require('axios');
 
-process.on('unhandledRejection', (error) => console.error(error));
-
 const platforms = { arkxb: true, arkps: true, arkse: true };
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0250 });
 
-const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 1000 }); // 1 request per second
-
-process.on('unhandledRejection', (error) => console.error('error'));
+process.on('unhandledRejection', (error) => console.error(error));
 
 module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
     async function loop() {
-      const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
-
       const adminExtraction = async (reference, service, response) => {
         await adminExtractionLogic(reference, service, response, client);
       };
@@ -93,6 +87,6 @@ module.exports = {
       });
       setTimeout(loop, 750000);
     };
-    loop().then(() => console.log('Loop started:'));
+    // loop().then(() => console.log('Loop started:'));
   },
 };

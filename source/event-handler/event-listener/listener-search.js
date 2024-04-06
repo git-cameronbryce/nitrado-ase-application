@@ -21,7 +21,7 @@ module.exports = {
               .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-            return interaction.followUp({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
           };
 
           const modal = new ModalBuilder()
@@ -98,20 +98,20 @@ module.exports = {
           try {
             const url = 'https://api.nitrado.net/services';
             const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            response.status === 200 ? gameserver(reference, response.data.data.services) : unauthorized();
-          } catch (error) { unauthorized() };
+            response.status === 200 ? gameserver(reference, response.data.data.services) : null;
+          } catch (error) { null };
         };
 
         const token = async (reference) => {
           try {
             const url = 'https://oauth.nitrado.net/token';
             const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            response.status === 200 ? service(reference) : unauthorized();
-          } catch (error) { unauthorized() };
+            response.status === 200 ? service(reference) : null();
+          } catch (error) { null };
         };
 
         const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data();
-        reference ? await token(reference) : unauthorized();
+        reference ? await token(reference) : null;
       }
 
       if (interaction.customId === 'username-search') {
@@ -139,7 +139,7 @@ module.exports = {
         let counter = 0;
         const document = async (reference) => {
           const playerReference = (await db.collection('ase-collection').doc(interaction.guild.id).get()).data();
-          let output = ''; // Initialize output variable
+          let output = '';
 
           const extraction = async (player, accounts) => {
             accounts.forEach(account => {
@@ -174,12 +174,12 @@ module.exports = {
           try {
             const url = 'https://oauth.nitrado.net/token';
             const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            response.status === 200 ? document(reference) : unauthorized();
-          } catch (error) { unauthorized() };
+            response.status === 200 ? document(reference) : null;
+          } catch (error) { null };
         };
 
         const reference = (await db.collection('ase-configuration').doc(interaction.guild.id).get()).data();
-        reference ? await token(reference) : unauthorized();
+        reference ? await token(reference) : null;
       }
     });
   },

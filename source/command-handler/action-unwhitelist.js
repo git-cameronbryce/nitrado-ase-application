@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FieldValue } = require('@google-cloud/firestore');
 const { db } = require('../script.js');
 const axios = require('axios');
+const { Unauthorized, NoAccount, GameCommandSuccess, GameServerActionSuccess } = require('../utils/embeds.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,21 +26,11 @@ module.exports = {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 
       if (!role || !interaction.member.roles.cache.has(role.id)) {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed], ephemeral: true });
+        return interaction.followUp({ embeds: [Unauthorized(role)], ephemeral: true });
       };
 
       const unauthorized = async () => {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have a connected account.\nPlease authorize with your provider.\n\`/setup-account\`\n\n**Additional Information**\nEnsure you follow setup procedures.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed] });
+        return interaction.followUp({ embeds: [NoAccount()] });
       };
 
       let current = 0, success = 0;
@@ -59,22 +50,12 @@ module.exports = {
         const tasks = await services.map(async service => await filter(service));
 
         await Promise.all(tasks).then(async () => {
-          const embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setThumbnail('https://i.imgur.com/CzGfRzv.png')
-
-          await interaction.followUp({ embeds: [embed] })
+          await interaction.followUp({ embeds: [GameCommandSuccess] })
 
           try {
-            const embed = new EmbedBuilder()
-              .setColor('#2ecc71')
-              .setFooter({ text: `Tip: Contact support if there are issues.` })
-              .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-unwhitelist\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
-
+ 
             const channel = await interaction.client.channels.fetch(reference.audits.player);
-            await channel.send({ embeds: [embed] });
+            await channel.send({ embeds: [GameServerActionSuccess(input,interaction)] });
 
           } catch (error) { console.log('Missing access.') }
         });

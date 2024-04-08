@@ -1,4 +1,4 @@
-const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, GatewayIntentBits } = require('discord.js');
+const { ActionRowBuilder, Events, ModalBuilder,TextInputBuilder, TextInputStyle, EmbedBuilder } = require('discord.js');
 const { xbox } = require('../../other/config.json');
 const { db } = require('../../script');
 const axios = require('axios');

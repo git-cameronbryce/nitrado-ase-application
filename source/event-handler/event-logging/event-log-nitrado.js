@@ -7,7 +7,7 @@ const { db } = require('../../script');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true };
-const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0250 });
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0o250 });
 
 process.on('unhandledRejection', (error) => console.error(error));
 

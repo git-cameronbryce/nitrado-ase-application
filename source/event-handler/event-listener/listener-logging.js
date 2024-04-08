@@ -1,6 +1,7 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
 const { db } = require('../../script');
 const axios = require('axios');
+const { Unauthorized, PendingAuthorization } = require('../../utils/embeds');
 
 const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
 
@@ -15,12 +16,7 @@ module.exports = {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
-            const embed = new EmbedBuilder()
-              .setColor('#e67e22')
-              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-              .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [Unauthorized(role)], ephemeral: true });
           };
 
           await interaction.deferReply();
@@ -57,13 +53,7 @@ module.exports = {
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 );
-
-              const embed = new EmbedBuilder()
-                .setColor('#2ecc71')
-                .setDescription(`**Pending Action Authorization**\nGrant permission to access your services.\nThe bot will begin installing your logging.\n\`🔐\` Pending: x${success} \`🟠\` Failure: x${total - success}\n\n**Additional Information**\nMultiple threads will be generated.`)
-                .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-              await interaction.followUp({ embeds: [embed], components: [button], ephemeral: false });
+              await interaction.followUp({ embeds: [PendingAuthorization(success,total)], components: [button], ephemeral: false });
             });
           };
 
@@ -93,12 +83,7 @@ module.exports = {
           const role = roles.find(role => role.name === 'Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
-            const embed = new EmbedBuilder()
-              .setColor('#e67e22')
-              .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-              .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [Unauthorized(role)], ephemeral: true });
           };
 
           await interaction.deferReply();

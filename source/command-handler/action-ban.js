@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { db } = require('../script.js');
 const axios = require('axios');
+const { Unauthorized, GameCommandSuccess } = require('../utils/embeds.js');
 
 process.on('unhandledRejection', (error) => console.error(error));
 
@@ -30,12 +31,7 @@ module.exports = {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 
       if (!role || !interaction.member.roles.cache.has(role.id)) {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed], ephemeral: true });
+        return interaction.followUp({ embeds: [Unauthorized(role)], ephemeral: true });
       };
 
       const unauthorized = async () => {
@@ -64,13 +60,8 @@ module.exports = {
         const tasks = await services.map(async service => await filter(service));
 
         await Promise.all(tasks).then(async () => {
-          const embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
-          await interaction.followUp({ embeds: [embed] })
+          await interaction.followUp({ embeds: [GameCommandSuccess(success,current)] })
             .then(async () => {
               if (success) {
 

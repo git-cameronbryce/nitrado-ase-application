@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FieldValue } = require('@google-cloud/firestore');
 const { db } = require('../script.js');
 const axios = require('axios');
+const { Unauthorized, NoAccount } = require('../utils/embeds.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,21 +26,11 @@ module.exports = {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 
       if (!role || !interaction.member.roles.cache.has(role.id)) {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed], ephemeral: true });
+        return interaction.followUp({ embeds: [Unauthorized(role)], ephemeral: true });
       };
 
       const unauthorized = async () => {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have a connected account.\nPlease authorize with your provider.\n\`/setup-account\`\n\n**Additional Information**\nEnsure you follow setup procedures.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed] });
+        return interaction.followUp({ embeds: [NoAccount()] });
       };
 
       let current = 0, success = 0;

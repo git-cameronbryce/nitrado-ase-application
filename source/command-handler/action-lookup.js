@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { db } = require('../script.js');
+const { Unauthorized, DatabaseCommandFailure, DatabaseCommandSuccess } = require('../utils/embeds.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,33 +21,16 @@ module.exports = {
       const role = roles.find(role => role.name === 'Obelisk Permission');
 
       if (!role || !interaction.member.roles.cache.has(role.id)) {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Unauthorized Access**\nYou do not have the required permissions.\nPlease ask an administrator for access.\n${role}\n\n ** Additional Information **\nThe role was generated upon token setup.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-        return interaction.followUp({ embeds: [embed], ephemeral: true });
+        return interaction.followUp({ embeds: [Unauthorized(role)], ephemeral: true });
       };
 
       const invalidPlayer = async () => {
-        const embed = new EmbedBuilder()
-          .setColor('#e67e22')
-          .setDescription(`**Database Command Failure**\nQueried player data not stored.\nBan information isn\'t stored.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-          .setThumbnail('https://i.imgur.com/PCD2pG4.png')
-
-        return await interaction.followUp({ embeds: [embed] });
+        return await interaction.followUp({ embeds: [DatabaseCommandFailure] });
       }
 
       const validPlayer = async ({ admin, reason }) => {
-        const embed = new EmbedBuilder()
-          .setColor('#2ecc71')
-          .setDescription(`**Database Command Success**\nPlayer information retrieved.\n\nRemoved for ${reason}.\n__ID: ${admin}__`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
-          .setThumbnail('https://i.imgur.com/CzGfRzv.png')
-
         playerFound = true;
-        return await interaction.followUp({ embeds: [embed] });
+        return await interaction.followUp({ embeds: [DatabaseCommandSuccess(reason,admin)] });
       }
 
       playerFound = false

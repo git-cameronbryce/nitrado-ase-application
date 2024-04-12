@@ -27,7 +27,7 @@ module.exports = {
     input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
 
     await interaction.guild.roles.fetch().then(async roles => {
-      const role = roles.find(role => role.name === 'Obelisk Permission');
+      const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
       if (!role || !interaction.member.roles.cache.has(role.id)) {
         const embed = new EmbedBuilder()

@@ -13,7 +13,7 @@ module.exports = {
 
       if (interaction.customId === 'gamertag-search') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -51,37 +51,43 @@ module.exports = {
           const extraction = async (service, gameserver, players) => {
 
             players.forEach(async player => {
-              if (player.name.toLowerCase().includes(identifier.toLowerCase()) && counter < 5) {
-                switch (player.online) {
-                  case true:
-                    output += `\`🟢\` \`Player Online\`\n${gameserver.query.server_name ? `\`🔗\` ${gameserver.query.server_name}` : '\`🔗\` Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(player.last_online) / 1000)}:f>\n\`🔗\` ${player.name}\n\n`
-                    counter++
-                    break;
+              try {
+                if (player.name.toLowerCase().includes(identifier.toLowerCase()) && counter < 5) {
+                  switch (player.online) {
+                    case true:
+                      output += `\`🟢\` \`Player Online\`\n${gameserver.query.server_name ? `\`🔗\` ${gameserver.query.server_name}` : '\`🔗\` Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(player.last_online) / 1000)}:f>\n\`🔗\` ${player.name}\n\n`
+                      counter++
+                      break;
 
-                  case false:
-                    output += `\`🟠\` \`Player Offline\`\n${gameserver.query.server_name ? `\`🔗\` ${gameserver.query.server_name}` : '\`🔗\` Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(player.last_online) / 1000)}:f>\n\`🔗\` ${player.name}\n\n`
-                    counter++
-                    break;
+                    case false:
+                      output += `\`🟠\` \`Player Offline\`\n${gameserver.query.server_name ? `\`🔗\` ${gameserver.query.server_name}` : '\`🔗\` Data Fetch Error - API Outage'}\n\`🔗\` <t:${Math.floor(Date.parse(player.last_online) / 1000)}:f>\n\`🔗\` ${player.name}\n\n`
+                      counter++
+                      break;
 
-                  default:
-                    break;
+                    default:
+                      break;
+                  };
                 };
-              };
+              } catch (error) { null };
             });
           };
 
           const path = async (reference, service, gameserver) => {
-            const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/players`;
-            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            if (response.status === 200) { await extraction(service, gameserver, response.data.data.players) }
+            try {
+              const url = `https://api.nitrado.net/services/${service.id}/gameservers/games/players`;
+              const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+              if (response.status === 200) { await extraction(service, gameserver, response.data.data.players) }
+            } catch (error) { null };
           };
 
           const tasks = await services.map(async service => {
-            const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
-            const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-            if (response.status === 200 && platforms[response.data.data.gameserver.game]) {
-              await path(reference, service, response.data.data.gameserver);
-            };
+            try {
+              const url = `https://api.nitrado.net/services/${service.id}/gameservers`;
+              const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
+              if (response.status === 200 && platforms[response.data.data.gameserver.game]) {
+                await path(reference, service, response.data.data.gameserver);
+              };
+            } catch (error) { null };
           });
 
           await Promise.all(tasks).then(async () => {

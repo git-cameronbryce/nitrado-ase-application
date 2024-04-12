@@ -1,4 +1,6 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
+const config = require('../../other/config.json');
+const stripe = require('stripe')(config.stripe.key);
 const { db } = require('../../script');
 const axios = require('axios');
 
@@ -12,7 +14,7 @@ module.exports = {
 
       if (interaction.customId === 'automatic-setup') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -24,6 +26,30 @@ module.exports = {
           };
 
           await interaction.deferReply();
+          const inactive = async () => {
+            const button = new ActionRowBuilder()
+              .addComponents(
+                new ButtonBuilder()
+                  .setLabel('Upgrade Version')
+                  .setCustomId('upgrade-version')
+                  .setStyle(ButtonStyle.Success),
+
+                new ButtonBuilder()
+                  .setURL('https://discord.gg/jee3ukfvVr')
+                  .setLabel('Support Server')
+                  .setStyle(ButtonStyle.Link),
+              );
+
+            const embed = new EmbedBuilder()
+              .setColor('#2ecc71')
+              .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
+              .setThumbnail('https://i.imgur.com/CzGfRzv.png')
+
+            await interaction.followUp({ embeds: [embed], components: [button] });
+          };
+
+          let success = 0;
           const gameserver = async (reference, services) => {
             let success = 0, total = 0;
             const path = async (reference, service, { game_specific: { path } }) => {
@@ -90,7 +116,7 @@ module.exports = {
 
       if (interaction.customId === 'confirm-setup') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()

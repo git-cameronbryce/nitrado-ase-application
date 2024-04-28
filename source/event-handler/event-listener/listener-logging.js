@@ -1,6 +1,4 @@
 const { ActionRowBuilder, Events, EmbedBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
-const config = require('../../other/config.json');
-const stripe = require('stripe')(config.stripe.key);
 const { db } = require('../../script');
 const axios = require('axios');
 

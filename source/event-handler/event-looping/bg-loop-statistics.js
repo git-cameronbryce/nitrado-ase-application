@@ -6,7 +6,7 @@ const axios = require('axios');
 process.on('unhandledRejection', (error) => console.error(error));
 
 const platforms = { arkxb: true, arkps: true, arkse: true, arkswitch: true };
-const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0250 });
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 250 });
 
 module.exports = {
   name: Events.ClientReady,
@@ -64,7 +64,7 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? token(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 150000)
+      setTimeout(loop, 15000)
     };
     loop().then(() => console.log('Loop started:'));
   },

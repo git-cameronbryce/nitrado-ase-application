@@ -7,7 +7,7 @@ const { db } = require('../../script');
 const axios = require('axios');
 
 const platforms = { arkxb: true, arkps: true, arkse: true };
-const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 0250 });
+const api = rateLimit(axios.create(), { maxRequests: 1, perMilliseconds: 250 });
 
 process.on('unhandledRejection', (error) => console.error(error));
 
@@ -83,10 +83,10 @@ module.exports = {
 
       const reference = await db.collection('ase-configuration').get();
       reference.forEach(doc => {
-        doc.data() ? token(doc.data()) : console.log('Invalid document.');
+        doc.data() ? token(doc.id, doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 750000);
+      setTimeout(loop, 15000);
     };
-    // loop().then(() => console.log('Loop started:'));
+    loop().then(() => console.log('Loop started:'));
   },
 };

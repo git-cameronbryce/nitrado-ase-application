@@ -67,13 +67,12 @@ module.exports = {
 
           await interaction.followUp({ embeds: [embed] })
             .then(async () => {
-              if (success) {
-
+              if (success > 0) {
                 try {
                   const embed = new EmbedBuilder()
                     .setColor('#2ecc71')
                     .setFooter({ text: `Tip: Contact support if there are issues.` })
-                    .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-unban\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
+                    .setDescription(`**Player Command Logging**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.\n\`/ase-player-unban\`\n\n${input.username} was unbanned.`)
 
                   const channel = await interaction.client.channels.fetch(reference.audits.player);
                   await channel.send({ embeds: [embed] });

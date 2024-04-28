@@ -68,14 +68,15 @@ module.exports = {
           await interaction.followUp({ embeds: [embed] })
 
           try {
-            const embed = new EmbedBuilder()
-              .setColor('#2ecc71')
-              .setFooter({ text: `Tip: Contact support if there are issues.` })
-              .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-unwhitelist\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
+            if (success > 0) {
+              const embed = new EmbedBuilder()
+                .setColor('#2ecc71')
+                .setFooter({ text: `Tip: Contact support if there are issues.` })
+                .setDescription(`**Player Command Logging**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.\n\`/ase-player-unwhitelist\`\n\n${input.username} was unwhitelisted.`)
 
-            const channel = await interaction.client.channels.fetch(reference.audits.player);
-            await channel.send({ embeds: [embed] });
-
+              const channel = await interaction.client.channels.fetch(reference.audits.player);
+              await channel.send({ embeds: [embed] });
+            }
           } catch (error) { console.log('Missing access.') }
         });
       };

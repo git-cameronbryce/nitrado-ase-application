@@ -66,19 +66,18 @@ module.exports = {
         await Promise.all(tasks).then(async () => {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.`)
+            .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.\nRemoved for ${input.reason}.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
           await interaction.followUp({ embeds: [embed] })
             .then(async () => {
-              if (success) {
-
+              if (success > 0) {
                 try {
                   const embed = new EmbedBuilder()
                     .setColor('#2ecc71')
                     .setFooter({ text: `Tip: Contact support if there are issues.` })
-                    .setDescription(`**Player Command Logging**\nGameserver action completed.\n\`/ase-player-ban\`\n\`${input.username}\`\n\n**ID: ${interaction.user.id}**`);
+                    .setDescription(`**Player Command Logging**\nGameserver action completed.\nExecuted on \`${success}\` of \`${current}\` servers.\n\`/ase-player-ban\`\n\n${input.username} was...\nRemoved for ${input.reason}.`)
 
                   const channel = await interaction.client.channels.fetch(reference.audits.player);
                   await channel.send({ embeds: [embed] });

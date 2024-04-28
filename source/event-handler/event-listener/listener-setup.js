@@ -1,4 +1,6 @@
 const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { keys } = require('../../other/config.json')
+const stripe = require('stripe')(keys.development);
 const { db } = require('../../script');
 const axios = require('axios');
 
@@ -22,7 +24,6 @@ module.exports = {
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
             );
-
           modal.addComponents(row);
           await interaction.showModal(modal);
         }
@@ -30,26 +31,26 @@ module.exports = {
         if (interaction.customId === 'token-modal') {
           const invalidToken = async () => {
             await interaction.reply({ content: 'Setup failure, ensure you follow provided steps above.', ephemeral: true });
-          }
+          };
 
           const validToken = async ({ token }) => {
             const button = new ActionRowBuilder()
               .addComponents(
                 new ButtonBuilder()
-                  .setLabel('Continue Installation')
-                  .setCustomId('continue-installation')
+                  .setLabel('Setup Cluster')
+                  .setCustomId('setup-cluster')
                   .setStyle(ButtonStyle.Success)
                   .setDisabled(false),
 
                 new ButtonBuilder()
-                  .setURL('https://donate.stripe.com/4gwbJm39u6oD3YcaEF')
-                  .setLabel('Donation')
+                  .setLabel('Support Server')
+                  .setURL('https://discord.gg/jhSNyJFqgt')
                   .setStyle(ButtonStyle.Link),
               );
 
             const embed = new EmbedBuilder()
               .setColor('#2ecc71')
-              .setDescription(`**Token Creation & Overview**\nFor those interested in supporting our development directly, consider donating or upgrading to our paid version after installation.\n\n**Additional Information**\nWe balance stability then features, in that order. The core of our service is free, but the resource and request-heavy features will require payment. \n\n**[Partnership & Information](https://nitra.do/obeliskdevelopment \"Nitrado Partner Link\")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
+              .setDescription(`**Obelisk Creation & Overview**\nFor those interested in using our utility tooling, please select the button below and set up your payment information. \n\n**Additional Information**\nWe balance stability then features, in that order. Payments received will be towards funding ongoing development. \n\n**[Partnership & Information](https://nitra.do/obeliskdevelopment \"Nitrado Partner Link\")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
               .setFooter({ text: 'Tip: Contact support if there are issues.' })
               .setImage('https://i.imgur.com/2ZIHUgx.png')
 
@@ -64,227 +65,301 @@ module.exports = {
 
             const url = 'https://oauth.nitrado.net/token';
             const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-            response.status === 200 && interaction.guild.features.includes('COMMUNITY') && response.data.data.token.scopes[0] === 'service'
+            response.status === 200 && interaction.guild.features.includes('COMMUNITY') && response.data.data.token.scopes.includes('service')
               ? validToken(nitrado) : invalidToken();
 
           } catch (error) { invalidToken(), null };
         };
 
-        if (interaction.customId === 'continue-installation') {
-          const installation = await interaction.reply({ content: 'Installing...', ephemeral: true });
+        if (interaction.customId === 'setup-cluster') {
+          await interaction.deferReply({ ephemeral: true })
+          const payments = async () => {
+            const subscriptionOne = await stripe.checkout.sessions.create({
+              success_url: 'https://example.com/success',
+              line_items: [
+                {
+                  price: 'price_1P2isBA2CaLsHzBaMjKNXdYp',
+                  quantity: 1,
+                },
+              ],
 
-          const roles = await interaction.guild.roles.fetch();
-          const action = roles.map(async role => role.name === 'Obelisk Permission' ? await role.delete() : null);
-          try { await Promise.all(action) } catch (error) { return await installation.edit({ content: 'In your settings, move the bot role above the newly generated permission role.', ephemeral: true }) };
+              subscription_data: {
+                'metadata': {
+                  guild: interaction.guild.id,
+                  user: interaction.user.id
+                },
+              },
+              mode: 'subscription',
+            });
 
-          await interaction.guild.roles.create({
-            name: 'Obelisk Permission',
-            color: '#ffffff',
-          }).then(() => console.log('Role created...'));
+            const subscriptionTwo = await stripe.checkout.sessions.create({
+              success_url: 'https://example.com/success',
+              line_items: [
+                {
+                  price: 'price_1PANB2A2CaLsHzBaFzSymfsI',
+                  quantity: 1,
+                },
+              ],
 
-          const permissions = [{
-            id: interaction.guild.id,
-            deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-          }];
+              subscription_data: {
+                'metadata': {
+                  guild: interaction.guild.id,
+                  user: interaction.user.id
+                },
+              },
+              mode: 'subscription',
+            });
 
-          const statistics = await interaction.guild.channels.create({
-            name: `AS:E Cluster Statistics`,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+            const button = new ActionRowBuilder()
+              .addComponents(
+                new ButtonBuilder()
+                  .setLabel('$12.99 x1 Month')
+                  .setURL(subscriptionOne.url)
+                  .setStyle(ButtonStyle.Link),
 
-          const statisticsPlayers = await interaction.guild.channels.create({
-            name: 'Active: 0 Players',
-            type: ChannelType.GuildVoice,
-            permissionOverwrites: permissions,
-            parent: statistics
-          });
+                new ButtonBuilder()
+                  .setLabel('$49.99 x6 Months')
+                  .setURL(subscriptionTwo.url)
+                  .setStyle(ButtonStyle.Link),
+              );
 
-          const statisticsActive = await interaction.guild.channels.create({
-            name: 'Active: 0 Servers',
-            type: ChannelType.GuildVoice,
-            permissionOverwrites: permissions,
-            parent: statistics
-          });
+            const embed = new EmbedBuilder()
+              .setColor('#2ecc71')
+              .setDescription(`**Payment Creation & Overview**\nPlease select a payment option below, you may do a simple monthly subscription or purchase our bundle for an additional 35% savings.\n\n**Additional Information**\nThis is a non-refundable agreement. \nPromotional coupons are accepted.\n\n**After Payment Process**\nPlease allow upwards of 60s for our database to store your subscription, then select the button above this embed to continue the installation.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
+              .setImage('https://i.imgur.com/2ZIHUgx.png')
 
-          const statisticsOutage = await interaction.guild.channels.create({
-            name: 'Outage: 0 Servers',
-            type: ChannelType.GuildVoice,
-            permissionOverwrites: permissions,
-            parent: statistics
-          });
+            await interaction.followUp({ embeds: [embed], components: [button], ephemeral: true })
+          }
 
-          const management = await interaction.guild.channels.create({
-            name: `AS:E Obelisk Management`,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+          try {
+            let active = false;
+            const subscriptions = await stripe.subscriptions.list({ limit: 100, status: 'active' });
 
-          const managementStatus = await interaction.guild.channels.create({
-            name: '⚫️│𝗦erver-𝗦tatus',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: management
-          });
+            await Promise.all(subscriptions.data.map(async item => {
+              if (item.metadata.guild === interaction.guild.id) {
+                const installation = await interaction.followUp({ content: 'Installing...', ephemeral: true });
 
-          await interaction.guild.channels.create({
-            name: '⚫│𝗖ommands',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: management
-          });
+                active = true;
+                const roles = await interaction.guild.roles.fetch();
+                const action = roles.map(async role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission' ? await role.delete() : null);
+                try { await Promise.all(action) } catch (error) { return await installation.edit({ content: 'In your settings, move the bot role above the newly generated permission role.', ephemeral: true }) };
 
-          let embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Obelisk System Information**\nInformation is initialized in our database.\nProceeding with the setup process.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
+                await interaction.guild.roles.create({
+                  name: 'AS:E Obelisk Permission',
+                  color: '#ffffff',
+                }).then(() => console.log('Role created...'));
 
-          const managementMessage = await managementStatus.send({ embeds: [embed] });
+                const permissions = [{
+                  id: interaction.guild.id,
+                  deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+                }];
 
-          const metadata = await interaction.guild.channels.create({
-            name: `AS:E Player Metadata `,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+                const statistics = await interaction.guild.channels.create({
+                  name: `AS:E Cluster Statistics`,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
 
-          const metadataPlayer = await interaction.guild.channels.create({
-            name: '📄│𝗣layer-𝗠etadata',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: metadata
-          });
+                const statisticsPlayers = await interaction.guild.channels.create({
+                  name: 'Active: 0 Players',
+                  type: ChannelType.GuildVoice,
+                  permissionOverwrites: permissions,
+                  parent: statistics
+                });
 
-          let button = new ActionRowBuilder()
-            .addComponents(
-              new ButtonBuilder()
-                .setLabel('Gamertag Search')
-                .setCustomId('gamertag-search')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(false),
+                const statisticsActive = await interaction.guild.channels.create({
+                  name: 'Active: 0 Servers',
+                  type: ChannelType.GuildVoice,
+                  permissionOverwrites: permissions,
+                  parent: statistics
+                });
 
-              new ButtonBuilder()
-                .setLabel('Username Search')
-                .setCustomId('username-search')
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(false),
-            );
+                const statisticsOutage = await interaction.guild.channels.create({
+                  name: 'Outage: 0 Servers',
+                  type: ChannelType.GuildVoice,
+                  permissionOverwrites: permissions,
+                  parent: statistics
+                });
 
-          embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription('**Additional Information**\nYou do __not__ need to type their full tag or username. The bot will filter and return any matching values, case sensitivity does not matter.\n\n**Gamertag Searching**\nUsers will be collected and stored in our database whenever they join your cluster—allowing you to look up their gamertag to fetch information.\n\n**Username Searching**\nUsers will be collected and stored in our database whenever they cryopod a tame—allowing you to look up their in-game name to fetch information.')
-            .setImage('https://i.imgur.com/2ZIHUgx.png');
+                const management = await interaction.guild.channels.create({
+                  name: `AS:E Obelisk Management`,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
 
-          const metadataMessage = await metadataPlayer.send({ embeds: [embed], components: [button] })
+                const managementStatus = await interaction.guild.channels.create({
+                  name: '⚫️│𝗦erver-𝗦tatus',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: management
+                });
 
-          const audits = await interaction.guild.channels.create({
-            name: `AS:E Audit Logging`,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+                await interaction.guild.channels.create({
+                  name: '⚫│𝗖ommands',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: management
+                });
 
-          const auditsPlayer = await interaction.guild.channels.create({
-            name: '📄│𝗣layer-𝗖ommands',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: audits
-          });
+                let embed = new EmbedBuilder()
+                  .setColor('#2ecc71')
+                  .setDescription(`**Obelisk System Information**\nInformation is initialized in our database.\nProceeding with the setup process.`)
+                  .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-          const auditsServer = await interaction.guild.channels.create({
-            name: '📄│𝗦erver-𝗖ommands',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: audits
-          });
+                const managementMessage = await managementStatus.send({ embeds: [embed] });
 
-          const logging = await interaction.guild.channels.create({
-            name: `AS:E Game Logging `,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+                const metadata = await interaction.guild.channels.create({
+                  name: `AS:E Player Searching `,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
 
-          const loggingOnline = await interaction.guild.channels.create({
-            name: '📑│𝗢nline-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
+                const metadataPlayer = await interaction.guild.channels.create({
+                  name: '📄│𝗣layer-𝗦earching',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: metadata
+                });
 
-          const loggingAdmin = await interaction.guild.channels.create({
-            name: '📑│𝗔dmin-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
+                button = new ActionRowBuilder()
+                  .addComponents(
+                    new ButtonBuilder()
+                      .setLabel('Gamertag Search')
+                      .setCustomId('gamertag-search')
+                      .setStyle(ButtonStyle.Success)
+                      .setDisabled(false),
 
-          const loggingChat = await interaction.guild.channels.create({
-            name: '📑│𝗖hat-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
+                    new ButtonBuilder()
+                      .setLabel('Username Search')
+                      .setCustomId('username-search')
+                      .setStyle(ButtonStyle.Secondary)
+                      .setDisabled(true),
+                  );
 
-          const loggingJoin = await interaction.guild.channels.create({
-            name: '📑│𝗝oin-𝗟ogging',
-            type: ChannelType.GuildForum,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
+                embed = new EmbedBuilder()
+                  .setColor('#2ecc71')
+                  .setDescription('**Additional Information**\nYou do __not__ need to type their full tag or username. The bot will filter and return any matching values, case sensitivity does not matter.\n\n**Gamertag Searching**\nUsers will be collected and stored in our database whenever they join your cluster—allowing you to look up their gamertag to fetch information.\n\n**Username Searching**\nUsers will be collected and stored in our database whenever they cryopod a tame—allowing you to look up their in-game name to fetch information.')
+                  .setImage('https://i.imgur.com/2ZIHUgx.png');
 
-          button = new ActionRowBuilder()
-            .addComponents(
-              new ButtonBuilder()
-                .setLabel('Automatic Setup')
-                .setCustomId('automatic-setup')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(false),
+                const metadataMessage = await metadataPlayer.send({ embeds: [embed], components: [button] })
 
-              new ButtonBuilder()
-                .setLabel('Manual Setup')
-                .setCustomId('manual-setup')
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true),
-            );
+                const audits = await interaction.guild.channels.create({
+                  name: `AS:E Audit Logging`,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
 
-          embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Logging Creation Tooling**\nSelect the buttons below to utilize our logging services. Start with the automated setup, then begin installing the remaining manually.\n\n**Additional Information**\nActive servers generate faster-flowing logs. Nitrado may take upwards of one hour to process logs and submit them to your folder.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setImage('https://i.imgur.com/2ZIHUgx.png')
+                const auditsPlayer = await interaction.guild.channels.create({
+                  name: '📄│𝗣layer-𝗖ommands',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: audits
+                });
 
-          const process = await interaction.guild.channels.create({
-            name: '📑│𝗜nstallation',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: logging
-          });
+                const auditsServer = await interaction.guild.channels.create({
+                  name: '📄│𝗦erver-𝗖ommands',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: audits
+                });
 
-          await process.send({ embeds: [embed], components: [button] });
+                const logging = await interaction.guild.channels.create({
+                  name: `AS:E Game Logging `,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
 
-          const protections = await interaction.guild.channels.create({
-            name: `AS:E Protections `,
-            type: ChannelType.GuildCategory,
-            permissionOverwrites: permissions
-          });
+                const loggingOnline = await interaction.guild.channels.create({
+                  name: '📑│𝗢nline-𝗟ogging',
+                  type: ChannelType.GuildForum,
+                  permissionOverwrites: permissions,
+                  parent: logging
+                });
 
-          const protectionsDupe = await interaction.guild.channels.create({
-            name: '🔗│𝗗upe-𝗗etection',
-            type: ChannelType.GuildText,
-            permissionOverwrites: permissions,
-            parent: protections
-          });
+                const loggingAdmin = await interaction.guild.channels.create({
+                  name: '📑│𝗔dmin-𝗟ogging',
+                  type: ChannelType.GuildForum,
+                  permissionOverwrites: permissions,
+                  parent: logging
+                });
 
-          await db.collection('ase-configuration').doc(interaction.guild.id)
-            .update({
-              ['statistics']: { players: statisticsPlayers.id, active: statisticsActive.id, outage: statisticsOutage.id },
-              ['status']: { channel: managementStatus.id, message: managementMessage.id },
-              ['audits']: { server: auditsServer.id, player: auditsPlayer.id },
+                const loggingChat = await interaction.guild.channels.create({
+                  name: '📑│𝗖hat-𝗟ogging',
+                  type: ChannelType.GuildForum,
+                  permissionOverwrites: permissions,
+                  parent: logging
+                });
 
-              ['forum']: { chat: loggingChat.id, join: loggingJoin.id, admin: loggingAdmin.id, online: loggingOnline.id },
-              ['protections']: { channel: protectionsDupe.id }
-            }, { merge: true });
+                const loggingJoin = await interaction.guild.channels.create({
+                  name: '📑│𝗝oin-𝗟ogging',
+                  type: ChannelType.GuildForum,
+                  permissionOverwrites: permissions,
+                  parent: logging
+                });
 
-          await installation.edit({ content: 'Installation complete...', ephemeral: true });
+                button = new ActionRowBuilder()
+                  .addComponents(
+                    new ButtonBuilder()
+                      .setLabel('Automatic Setup')
+                      .setCustomId('automatic-setup')
+                      .setStyle(ButtonStyle.Success)
+                      .setDisabled(false),
+
+                    new ButtonBuilder()
+                      .setLabel('Manual Setup')
+                      .setCustomId('manual-setup')
+                      .setStyle(ButtonStyle.Secondary)
+                      .setDisabled(true),
+                  );
+
+                embed = new EmbedBuilder()
+                  .setColor('#2ecc71')
+                  .setDescription(`**Logging Creation Tooling**\nSelect the buttons below to utilize our logging services. Start with the automated setup, then begin installing the remaining manually.\n\n**Additional Information**\nActive servers generate faster-flowing logs. Nitrado may take upwards of one hour to process logs and submit them to your folder.`)
+                  .setFooter({ text: 'Tip: Contact support if there are issues.' })
+                  .setImage('https://i.imgur.com/2ZIHUgx.png')
+
+                const process = await interaction.guild.channels.create({
+                  name: '📑│𝗜nstallation',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: logging
+                });
+
+                await process.send({ embeds: [embed], components: [button] });
+
+                const protections = await interaction.guild.channels.create({
+                  name: `AS:E Protections `,
+                  type: ChannelType.GuildCategory,
+                  permissionOverwrites: permissions
+                });
+
+                const protectionsDuplication = await interaction.guild.channels.create({
+                  name: '🔗│𝗗upe-𝗗etection',
+                  type: ChannelType.GuildText,
+                  permissionOverwrites: permissions,
+                  parent: protections
+                });
+
+                await db.collection('ase-configuration').doc(interaction.guild.id)
+                  .update({
+                    ['statistics']: { players: statisticsPlayers.id, active: statisticsActive.id, outage: statisticsOutage.id },
+                    ['status']: { channel: managementStatus.id, message: managementMessage.id },
+                    ['audits']: { server: auditsServer.id, player: auditsPlayer.id },
+                    ['forum']: { chat: loggingChat.id, join: loggingJoin.id, admin: loggingAdmin.id, online: loggingOnline.id },
+                  }, { merge: true });
+              }
+            }));
+
+            console.log(active)
+            if (!active) { await payments() }
+
+          } catch (error) {
+            console.log(error);
+          }
         };
+
+
       } catch (error) { console.log(error) };
     });
   },

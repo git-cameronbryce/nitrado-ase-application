@@ -12,7 +12,7 @@ module.exports = {
 
       if (interaction.customId === 'cluster-command') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -74,7 +74,7 @@ module.exports = {
 
       if (interaction.customId === 'restart-cluster') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -147,7 +147,7 @@ module.exports = {
 
       if (interaction.customId === 'stop-cluster') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -220,7 +220,7 @@ module.exports = {
 
       if (interaction.customId === 'auto-maintanance') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -257,7 +257,7 @@ module.exports = {
 
       if (interaction.customId === 'enable-asm') {
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
@@ -302,7 +302,7 @@ module.exports = {
       if (interaction.customId === 'disable-asm') {
 
         await interaction.guild.roles.fetch().then(async roles => {
-          const role = roles.find(role => role.name === 'Obelisk Permission');
+          const role = roles.find(role => role.name === 'Obelisk Permission' || role.name === 'AS:E Obelisk Permission');
 
           if (!role || !interaction.member.roles.cache.has(role.id)) {
             const embed = new EmbedBuilder()
